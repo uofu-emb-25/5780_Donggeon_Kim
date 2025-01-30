@@ -1,4 +1,5 @@
-TARGET ?= LAB1
+TARGET_NAME = Lab1
+TARGET = $(BUILD_DIR)/$(TARGET_NAME).elf
 
 PREFIX = arm-none-eabi-
 CC = $(PREFIX)gcc
@@ -26,7 +27,8 @@ OPT = -Og
 BUILD_DIR = build
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).bin
+all: $(TARGET).bin
+
 
 ######################################
 # source
@@ -77,7 +79,7 @@ AS_DEFS =
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
 -DSTM32F072xB \
--D${TARGET}
+
 
 
 # AS includes
@@ -118,7 +120,7 @@ LIBS = -lc -lm -lnosys
 LIBDIR =
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS)
 
-flash: $(BUILD_DIR)/$(TARGET).bin
+flash: $(TARGET).bin
 	$(ST_FLASH) --reset --flash=128k --connect-under-reset write $< 0x8000000
 
 #######################################
@@ -137,14 +139,14 @@ $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
+$(TARGET): $(OBJECTS) Makefile
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
-$(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
+$(TARGET).hex: $(TARGET)
 	$(HEX) $< $@
 
-$(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
+$(TARGET).bin: $(TARGET)
 	$(BIN) $< $@
 
 $(BUILD_DIR):
@@ -162,3 +164,4 @@ clean:
 -include $(wildcard $(BUILD_DIR)/*.d)
 
 # *** EOF ***
+C_DEFS += -DLAB1
