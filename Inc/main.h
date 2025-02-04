@@ -1,4 +1,6 @@
-#pragma once
-#include <stdint.h>
+#ifndef MY_RCC_H
+#define MY_RCC_H
 
-void SystemClock_Config(void);
+void My_HAL_RCC_GPIOC_CLK_ENABLE(void);
+
+#endif
