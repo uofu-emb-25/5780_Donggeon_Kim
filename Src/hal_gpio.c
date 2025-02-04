@@ -8,7 +8,7 @@
 
 //for given code oragne and green
 #include <stm32f0xx.h>
-
+/*
 void My_HAL_RCC_GPIOC_CLK_ENABLE(void) {
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // Enable GPIOC clock
     assert(RCC->AHBENR & RCC_AHBENR_GPIOCEN); // Verify clock is enabled
@@ -64,9 +64,9 @@ int lab1_main(void) {
         My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9); // Toggle PC8 & PC9
     }
 }
-
-
-/*part1 bymyself
+////
+/*
+part1 bymyself
 // Custom GPIO Initialization Function
 void MY_HAL_GPIO_Init(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     // Set pins to general-purpose output mode (MODER register)
@@ -104,7 +104,7 @@ uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
 */
 
 // part2 bymyself
-/*
+
 void MY_HAL_GPIO_Init(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t Mode) {
     if (Mode == 1) { // Output mode
         GPIOx->MODER &= ~(0x3 << (GPIO_Pin * 2)); // Clear existing mode
@@ -137,4 +137,72 @@ void MY_HAL_GPIO_TogglePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
 // Function to Read GPIO Pin State
 uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     return (GPIOx->IDR & (1 << GPIO_Pin)) ? 1 : 0;
-}*/
+}
+
+
+
+
+//lab2_ part 1
+void MY_HAL_RCC_GPIOC_CLK_ENABLE(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN; // Enable GPIOC clock
+}
+
+void MY_HAL_RCC_GPIOA_CLK_ENABLE(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN; // Enable GPIOA clock
+}
+
+
+//2.2 Configuring the EXTI.
+void MY_HAL_GPIO_Init_EXTI_PA0(void) {
+    // Enable GPIOA Clock (If not already enabled)
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+
+    // Configure PA0 as Input (00)
+    GPIOA->MODER &= ~(3 << (0 * 2));  // Clear bits (00 = Input mode)
+
+    // Configure Pull-down Resistor (PD: 10)
+    GPIOA->PUPDR &= ~(3 << (0 * 2));  // Clear bits
+    GPIOA->PUPDR |= (2 << (0 * 2));   // Set to 10 (Pull-down)
+
+    // Enable EXTI for PA0
+    SYSCFG->EXTICR[0] &= ~(0xF << (0 * 4)); // Clear EXTI0 bits (Ensure PA0 is mapped)
+    SYSCFG->EXTICR[0] |= (0x0 << (0 * 4));  // Map PA0 to EXTI0
+
+    // Unmask EXTI Line 0
+    EXTI->IMR |= (1 << 0);
+
+    // Set EXTI to Rising Edge Trigger
+    EXTI->RTSR |= (1 << 0);
+    EXTI->FTSR &= ~(1 << 0);  // Ensure Falling trigger is disabled
+
+    // Enable EXTI0 Interrupt in NVIC
+    NVIC_EnableIRQ(EXTI0_1_IRQn);
+    NVIC_SetPriority(EXTI0_1_IRQn, 1);  // Set priority (higher than SysTick but not highest)
+}
+
+
+//2.3 Setting the SYSCFG Pin Multiplexer
+void MY_HAL_SYSCFG_Config_PA0(void) {
+    // Enable SYSCFG Clock (If not already enabled)
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+    // before Assert 
+    //Add an assertion before and after your setup function to verify the register values before and
+     // after invocation.
+    assert((SYSCFG->EXTICR[0] & (0xF << (0 * 4))) == 0);
+
+    // Configure SYSCFG to route PA0 to EXTI0
+    SYSCFG->EXTICR[0] &= ~(0xF << (0 * 4)); // Clear bits for EXTI0
+    SYSCFG->EXTICR[0] |= (0x0 << (0 * 4));  // Set PA0 to EXTI0 (0x0 = PA0)
+
+    // after asset
+    assert((SYSCFG->EXTICR[0] & (0xF << (0 * 4))) == 0x0);
+}
+//2.4
+void MY_HAL_EXTI_Enable_PA0(void) {
+    // Enable NVIC for EXTI0_1
+    NVIC_EnableIRQ(EXTI0_1_IRQn);
+
+    // Set priority to 1 (High Priority)
+    NVIC_SetPriority(EXTI0_1_IRQn, 1);
+}
