@@ -1,3 +1,4 @@
+//done by help of gpt
 #include <stdint.h>
 #include "stm32f072xb.h"
 #include <assert.h>
@@ -12,7 +13,7 @@ void My_HAL_RCC_GPIOC_CLK_ENABLE(void) {
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // Enable GPIOC clock
     assert(RCC->AHBENR & RCC_AHBENR_GPIOCEN); // Verify clock is enabled
 }
-
+//given example
 void My_HAL_GPIO_Init(void) {
     // Configure PC8 and PC9 as General Purpose Output Mode
     GPIOC->MODER &= ~((3U << (8 * 2)) | (3U << (9 * 2))); // Clear bits
