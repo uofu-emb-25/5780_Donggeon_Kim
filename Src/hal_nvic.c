@@ -10,3 +10,7 @@ void NVIC_Config(void) {
 void Fix_Interrupt_Starvation(void) {
     NVIC_SetPriority(EXTI0_1_IRQn, 3); // Set EXTI to lowest priority
 }
+
+void Adjust_SysTick_Priority(void) {
+    NVIC_SetPriority(SysTick_IRQn, 2); // Set SysTick to medium priority
+}

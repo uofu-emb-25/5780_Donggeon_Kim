@@ -82,6 +82,8 @@ int lab2_part2_main()  //
     // Configure PA0 Button as EXTI Interrupt   2.2
     MY_HAL_GPIO_Init_EXTI_PA0();
     
+    NVIC_Config();
+    
 
     return 0;
 }
