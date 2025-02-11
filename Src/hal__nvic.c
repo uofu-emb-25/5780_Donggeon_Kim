@@ -6,3 +6,7 @@ void NVIC_Config(void) {
     NVIC_EnableIRQ(EXTI0_1_IRQn);
     NVIC_SetPriority(EXTI0_1_IRQn, 1); // Priority 1 (High)
 }
+
+void Fix_Interrupt_Starvation(void) {
+    NVIC_SetPriority(EXTI0_1_IRQn, 3); // Set EXTI to lowest priority
+}

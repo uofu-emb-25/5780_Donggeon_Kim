@@ -85,10 +85,10 @@ void SysTick_Handler(void)
     tick_count++;   // 
     main_loop_tick++; //
 
-   // if (tick_count >= 200) {  //  200ms
-   //     GPIOC->ODR ^= (1 << 7); // blinking Blue LED (PC7)
-     //   tick_count = 0;  // control variable -  counter
-  //  }
+    if (tick_count >= 200) {  //  200ms
+       GPIOC->ODR ^= (1 << 7); // blinking Blue LED (PC7)
+        tick_count = 0;  // control variable -  counter
+   }
 }
 
 //2.5
