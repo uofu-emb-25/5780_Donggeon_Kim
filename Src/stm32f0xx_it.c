@@ -110,6 +110,19 @@ void EXTI0_1_IRQHandler(void) {
   }
 }
 
+
+//lab3
+// 3.4 - TIM2 IRQ Handler --toggling LEDs
+void TIM2_IRQHandler(void) {
+  if (TIM2->SR & TIM_SR_UIF) {  // check update event flag
+      TIM2->SR &= ~TIM_SR_UIF;  // clear flag
+      GPIOC->ODR ^= (1 << 8);    // toggle gren LED
+      GPIOC->ODR ^= (1 << 9);    // toggle orange LED
+  }
+}
+
+
+
 /******************************************************************************/
 /*                 STM32F0xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
