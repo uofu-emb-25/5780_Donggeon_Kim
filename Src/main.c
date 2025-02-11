@@ -4,7 +4,17 @@
 #include <stm32f0xx_hal.h>
 #include "main.h"
 #include "lab2.h"
+#include "lab1.h"
 extern void SystemClock_Config(void);  // Prevent multiple definition error
+
+extern int lab1_part1_main(void);
+extern int lab1_part2_main(void);
+extern int lab1_givenexample_main(void);
+
+extern int lab1_main(void);
+extern int lab2_main(void);
+
+
 
 // Part1
 /* void MY_HAL_RCC_GPIOC_CLK_ENABLE(void);
@@ -24,6 +34,15 @@ uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 void delay_ms(uint32_t ms);
 */
 int main(void) {
+
+     return lab1_part2_main();
+     //return lab1_part1_main();
+    
+}
+
+
+
+
 
 
 //given exmaple
@@ -113,9 +132,9 @@ void MY_HAL_RCC_GPIOC_CLK_ENABLE(void) {
         lastButtonState = buttonState;  // Store current button state
     }
 */
-     return lab2_main();
-    
-}
+
+
+
 //part1
 /*
 // Function to Enable GPIOC Clock
