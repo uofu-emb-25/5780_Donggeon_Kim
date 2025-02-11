@@ -31,6 +31,9 @@ void GPIO_Config(void);
 // Simple blocking delay
 void delay_ms(uint32_t ms);
 
+void NVIC_Config(void);
+void EXTI_Config(void);
+
 #ifdef __cplusplus
 }
 #endif

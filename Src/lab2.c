@@ -4,8 +4,8 @@
 #include <assert.h>
 
 #include "hal_gpio.h"
-#include "hal_exti.h"
-#include "hal_nvic.h"
+// #include "hal_exti.h"
+// #include "hal_nvic.h"
 
 extern void SystemClock_Config(void);
 //2.3 

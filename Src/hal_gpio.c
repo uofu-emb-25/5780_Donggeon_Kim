@@ -126,3 +126,31 @@ void GPIO_Config(void) {
     // Configure PC6, PC7, PC8, PC9 as outputs (LEDs)
     GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
 }
+
+
+void NVIC_Config(void) {
+    // Enable EXTI0_1 interrupt in NVIC
+    NVIC_EnableIRQ(EXTI0_1_IRQn);
+    NVIC_SetPriority(EXTI0_1_IRQn, 1); // Priority 1 (High)
+}
+
+void Fix_Interrupt_Starvation(void) {
+    NVIC_SetPriority(EXTI0_1_IRQn, 3); // Set EXTI to lowest priority
+}
+
+void Adjust_SysTick_Priority(void) {
+    NVIC_SetPriority(SysTick_IRQn, 2); // Set SysTick to medium priority
+}
+
+
+void EXTI_Config(void) {
+    // Enable system configuration controller clock
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN;
+
+    // Map EXTI0 to PA0 (User Button)
+    SYSCFG->EXTICR[0] &= ~(SYSCFG_EXTICR1_EXTI0); // Set to 0000 for PA0
+
+    // Enable EXTI0 interrupt on rising edge
+    EXTI->IMR |= EXTI_IMR_IM0;       // Unmask EXTI0
+    EXTI->RTSR |= EXTI_RTSR_RT0;     // Enable rising-edge trigger
+}
