@@ -1,4 +1,5 @@
 //hal_exti.c and hal_nvic.c are part of lab2
+
 #include "stm32f072xb.h"
 #include "system_setup.h"
 #include <stm32f0xx_hal.h>
@@ -101,8 +102,12 @@ int lab2_part2_main() {
     while (1) {
         // Blink Red LED (PC6) in main loop to show system is running
         GPIOC->ODR ^= (1 << 6); // Toggle Red LED (PC6)
+        NVIC_SetPriority(SysTick_IRQn, 0); 
         for (volatile int i = 500000; i > 0; i--); // Delay 400-600ms
     }
+
+    // How to leverage the setting SysTick to medium priority for Red LED
+    // NVIC_SetPriority(SysTick_IRQn, 2);  priority 2 for Red LED handling
 
     return 0;
 }
