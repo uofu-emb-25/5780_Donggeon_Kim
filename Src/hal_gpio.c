@@ -19,18 +19,21 @@ void MY_HAL_RCC_GPIOA_CLK_ENABLE(void)
 
 void MY_HAL_GPIO_Init(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t Mode)
 {
-    if (Mode == 1) { // Output
-        GPIOx->MODER &= ~(0x3 << (GPIO_Pin * 2)); 
+    // Clear MODER bits first
+    GPIOx->MODER &= ~(0x3 << (GPIO_Pin * 2));  
+
+    if (Mode == 1) { // Output mode
         GPIOx->MODER |=  (0x1 << (GPIO_Pin * 2)); 
-        GPIOx->OTYPER &= ~(0x1 << GPIO_Pin);
-        GPIOx->OSPEEDR &= ~(0x3 << (GPIO_Pin * 2));
-        GPIOx->PUPDR   &= ~(0x3 << (GPIO_Pin * 2));
-    } else { // Input with pull-down
-        GPIOx->MODER &= ~(0x3 << (GPIO_Pin * 2));
-        GPIOx->PUPDR &= ~(0x3 << (GPIO_Pin * 2));
-        GPIOx->PUPDR |=  (0x2 << (GPIO_Pin * 2));  // Pull-down enabled
+        GPIOx->OTYPER &= ~(0x1 << GPIO_Pin);  // Push-pull mode
+        GPIOx->OSPEEDR &= ~(0x3 << (GPIO_Pin * 2));  // Low speed
+        GPIOx->PUPDR &= ~(0x3 << (GPIO_Pin * 2)); // No pull-up/down
+    } 
+    else { // Input with Pull-Down
+        GPIOx->PUPDR &= ~(0x3 << (GPIO_Pin * 2));  
+        GPIOx->PUPDR |=  (0x2 << (GPIO_Pin * 2));  // Enable pull-down
     }
 }
+
 
 
 void MY_HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t PinState)
@@ -94,23 +97,21 @@ void MY_HAL_GPIO_Init_Output(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
 {
     MY_HAL_GPIO_Init(GPIOx, GPIO_Pin, 1);
 }
-
-
-
-
-/************************************************
- *  A "master" main if you want
- ************************************************/
-// #define LAB1
-// #define LAB2
-#ifdef LAB1
-int main(void)
-{
-    return lab1_main();
+//lab2 parts
+// Enable SYSCFG clock and configure EXTI for PA0
+void MY_HAL_SYSCFG_Config_PA0(void) {
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;  // Enable SYSCFG clock
+    SYSCFG->EXTICR[0] &= ~(0xF << (0 * 4)); // Clear EXTI0 config
+    SYSCFG->EXTICR[0] |= (0x0 << (0 * 4));  // Map EXTI0 to PA0
 }
-#elif defined(LAB2)
-int main(void)
-{
-    return lab2_main();
+
+// Enable EXTI0 for PA0
+void MY_HAL_EXTI_Enable_PA0(void) {
+    EXTI->IMR |= (1 << 0);  // Unmask EXTI0
+    EXTI->RTSR |= (1 << 0); // Enable Rising Edge Trigger
+    EXTI->FTSR &= ~(1 << 0); // Disable Falling Edge Trigger
+    NVIC_EnableIRQ(EXTI0_1_IRQn); // Enable EXTI0_1 interrupt in NVIC
+    NVIC_SetPriority(EXTI0_1_IRQn, 1);
 }
-#endif
+
+
