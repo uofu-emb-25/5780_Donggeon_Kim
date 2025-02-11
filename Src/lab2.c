@@ -83,7 +83,16 @@ int lab2_part2_main()  //
     MY_HAL_GPIO_Init_EXTI_PA0();
     
     NVIC_Config();
-    
+      // Set initial LED states
+      GPIOC->ODR |= (1 << 9); // Set PC9 HIGH initially
+
+      while (1) {
+          // Blink Red LED (PC6) in main loop to show system is running
+          GPIOC->ODR ^= (1 << 6); // Toggle Red LED (PC6)
+          for (volatile int i = 500000; i > 0; i--); // Delay 400-600ms
+      }
+  
+      return 0;
 
     return 0;
 }
