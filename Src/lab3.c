@@ -33,6 +33,10 @@ void TIM2_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN; 
     TIM2 ->PSC = 7999;
     TIM2-> ARR =250;
+
+    TIM2->DIER |= TIM_DIER_UIE; 
+    NVIC_EnableIRQ(TIM2_IRQn);   
+    TIM2->CR1 |= TIM_CR1_CEN;   
 }
 
 //3.5
