@@ -34,9 +34,10 @@ uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 void delay_ms(uint32_t ms);
 */
 int main(void) {
-
-     return lab1_part2_main();
-     //return lab1_part1_main();
+     return lab1_givenexample_main(); //given exmaple 
+       //return lab1_part1_main();
+  //   return lab1_part2_main();
+    
     
 }
 
@@ -46,11 +47,12 @@ int main(void) {
 
 
 //given exmaple
- /*  HAL_Init(); // Reset of all peripherals, init the Flash and Systick
-SystemClock_Config(); //Configure the system clock
-/* This example uses HAL library calls to control
-the GPIOC peripheral. You’ll be redoing this code
-with hardware register access. */
+  // HAL_Init(); // Reset of all peripherals, init the Flash and Systick
+//SystemClock_Config(); //Configure the system clock
+ //This example uses HAL library calls to control
+//the GPIOC peripheral. You’ll be redoing this code
+//with hardware register access. 
+
 /*__HAL_RCC_GPIOC_CLK_ENABLE(); // Enable the GPIOC clock in the RCC
 // Set up a configuration struct to pass to the initialization function
 GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9,

@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #include "stm32f0xx_hal.h"  // or stm32f0xx.h
+void delay_ms(uint32_t ms);
+
 
 // Clock enable functions
 void MY_HAL_RCC_GPIOC_CLK_ENABLE(void);
