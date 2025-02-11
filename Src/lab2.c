@@ -2,6 +2,7 @@
 #include "system_setup.h"
 #include <stm32f0xx_hal.h>
 #include <assert.h>
+#include<hal_gpio.h>
 
 extern void SystemClock_Config(void);
 //2.3 
@@ -69,7 +70,7 @@ int lab2_part1_main()  //
 int lab2_part2_main()  //
 {
     SystemClock_Config();
-
+    GPIO_Config(); 
     // Enable Clocks for GPIOC and GPIOA
     MY_HAL_RCC_GPIOC_CLK_ENABLE();
     MY_HAL_RCC_GPIOA_CLK_ENABLE();

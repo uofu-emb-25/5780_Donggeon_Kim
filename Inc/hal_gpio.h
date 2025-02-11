@@ -27,7 +27,7 @@ uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 
 // EXTI initialization for PA0
 void MY_HAL_GPIO_Init_EXTI_PA0(void);
-
+void GPIO_Config(void);
 // Simple blocking delay
 void delay_ms(uint32_t ms);
 
