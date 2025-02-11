@@ -17,7 +17,7 @@ void MY_HAL_GPIO_TogglePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 volatile uint32_t main_loop_tick = 0;  // Track time in main loop
 
-int lab2_part1_main()  // Change function name from main() to lab2_main()
+int lab2_part1_main()  //
 {
     SystemClock_Config();
 
@@ -65,6 +65,27 @@ int lab2_part1_main()  // Change function name from main() to lab2_main()
 
     return 0;
 }
+
+int lab2_part2_main()  //
+{
+    SystemClock_Config();
+
+    // Enable Clocks for GPIOC and GPIOA
+    MY_HAL_RCC_GPIOC_CLK_ENABLE();
+    MY_HAL_RCC_GPIOA_CLK_ENABLE();
+
+  
+    // Configure PA0 Button as EXTI Interrupt   2.2
+    MY_HAL_GPIO_Init_EXTI_PA0();
+    
+
+    return 0;
+}
+
+
+
+
+
 
 
 

@@ -114,4 +114,15 @@ void MY_HAL_EXTI_Enable_PA0(void) {
     NVIC_SetPriority(EXTI0_1_IRQn, 1);
 }
 
+//GPIO Pin
+void GPIO_Config(void) {
+    // Enable GPIOA and GPIOC clocks
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOCEN;
 
+    // Configure PA0 as input with pull-down resistor (User Button)
+    GPIOA->MODER &= ~(3 << (0 * 2)); // Input mode
+    GPIOA->PUPDR |= (2 << (0 * 2));  // Pull-down resistor
+
+    // Configure PC6, PC7, PC8, PC9 as outputs (LEDs)
+    GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
+}

@@ -20,8 +20,8 @@ int main(void) {
        //return lab1_givenexample_main(); //given exmaple 
        //return lab1_part1_main();
        // return lab1_part2_main();
-    return lab2_part1_main();
-    
+       //return lab2_part1_main();
+    return lab2_part2_main();
 }
 
 
