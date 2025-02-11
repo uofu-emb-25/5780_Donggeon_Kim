@@ -127,7 +127,7 @@ void GPIO_Config(void) {
     GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
 }
 
-
+/*i moved these back to hal_nvic and hal_exti
 void NVIC_Config(void) {
     // Enable EXTI0_1 interrupt in NVIC
     NVIC_EnableIRQ(EXTI0_1_IRQn);
@@ -154,3 +154,4 @@ void EXTI_Config(void) {
     EXTI->IMR |= EXTI_IMR_IM0;       // Unmask EXTI0
     EXTI->RTSR |= EXTI_RTSR_RT0;     // Enable rising-edge trigger
 }
+*/

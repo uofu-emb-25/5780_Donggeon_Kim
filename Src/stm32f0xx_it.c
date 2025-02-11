@@ -93,17 +93,22 @@ void SysTick_Handler(void)
 
 //2.5
 
-void EXTI0_1_IRQHandler(void)
-{
-    // Check if PA0 (EXTI0) triggered the interrupt
-    if (EXTI->PR & (1 << 0)) {  
-        GPIOC->ODR ^= (1 << 8); // Toggle Orange LED (PC8)
-        GPIOC->ODR ^= (1 << 9); // Toggle Green LED (PC9)
+void EXTI0_1_IRQHandler(void) {
+  if (EXTI->PR & (1 << 0)) {  // Check if PA0 caused the interrupt
+      EXTI->PR |= (1 << 0);   // Clear pending flag
 
-        EXTI->PR |= (1 << 0);  // ✅ Clear the EXTI pending flag
-    }
+      // Toggle Green and Orange LEDs BEFORE the delay
+      GPIOC->ODR ^= (1 << 8); // Toggle Orange LED (PC8)
+      GPIOC->ODR ^= (1 << 9); // Toggle Green LED (PC9)
+
+      // Simulate a long-running interrupt (about 1-2 seconds)
+      for (volatile int i = 1500000; i > 0; i--);  
+
+      // Toggle Green and Orange LEDs AGAIN after delay
+      GPIOC->ODR ^= (1 << 8); // Toggle Orange LED (PC8)
+      GPIOC->ODR ^= (1 << 9); // Toggle Green LED (PC9)
+  }
 }
-
 
 /******************************************************************************/
 /*                 STM32F0xx Peripherals Interrupt Handlers                   */
