@@ -129,21 +129,27 @@ void GPIO_Config(void) {
 
 //for lab3 3.6
 void MY_HAL_GPIO_Init_AF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t AF) {
-    // Set pin mode to Alternate Function
-    GPIOx->MODER &= ~(3 << (GPIO_Pin * 2));  // Clear mode bits (2 bits per pin)
-    GPIOx->MODER |= (2 << (GPIO_Pin * 2));   // Set to Alternate Function mode
+    // 1. Configure the pin to Alternate Function mode
+    GPIOx->MODER &= ~(3 << (GPIO_Pin * 2));  
+    GPIOx->MODER |=  (2 << (GPIO_Pin * 2));  
 
-    // Set output type to Push-Pull (default, no need to set unless needed)
+    // 2. Output type = Push-Pull
     GPIOx->OTYPER &= ~(1 << GPIO_Pin);
 
-    // Set speed to High
+    // 3. Speed = High
     GPIOx->OSPEEDR |= (3 << (GPIO_Pin * 2));
 
-    // Select Alternate Function (AF)
+    // 4. Clear old AF bits, then set new AF bits
     if (GPIO_Pin < 8) {
-        GPIOx->AFR[0] |= (AF << (GPIO_Pin * 4)); // AFR[0] for pins 0-7
+        // Clear bits
+        GPIOx->AFR[0] &= ~(0xF << (GPIO_Pin * 4));
+        // Set bits
+        GPIOx->AFR[0] |= (AF << (GPIO_Pin * 4));
     } else {
-        GPIOx->AFR[1] |= (AF << ((GPIO_Pin - 8) * 4)); // AFR[1] for pins 8-15
+        // Clear bits
+        GPIOx->AFR[1] &= ~(0xF << ((GPIO_Pin - 8) * 4));
+        // Set bits
+        GPIOx->AFR[1] |= (AF << ((GPIO_Pin - 8) * 4));
     }
 }
 
