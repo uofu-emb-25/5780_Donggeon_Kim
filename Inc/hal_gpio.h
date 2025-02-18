@@ -31,6 +31,8 @@ void GPIO_Config(void);
 // Simple blocking delay
 void delay_ms(uint32_t ms);
 
+void MY_HAL_GPIO_Init_AF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t Mode);
+
 
 #ifdef __cplusplus
 }

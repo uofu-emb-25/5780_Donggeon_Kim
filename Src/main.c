@@ -5,6 +5,7 @@
 #include "main.h"
 #include "lab2.h"
 #include "lab1.h"
+#include "lab3.h"
 extern void SystemClock_Config(void);  // Prevent multiple definition error
 //part1
 //extern int lab1_part1_main(void);
@@ -13,7 +14,8 @@ extern int lab1_part2_main(void);
 
 extern int lab1_givenexample_main(void);
 
-
+int lab3_main(void);
+extern volatile uint32_t main_loop_tick;
 
 
 int main(void) {
@@ -21,8 +23,8 @@ int main(void) {
        //return lab1_part1_main();
        // return lab1_part2_main();
        //return lab2_part1_main();
-       return lab2_part2_main();
-       //return lab3_main();
+       //return lab2_part2_main();
+       return lab3_main();
 }
 
 
