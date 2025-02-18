@@ -41,39 +41,39 @@ void TIM2_Init(void) {
 
 //3.5
 void TIM3_Init(void) {
+    // 1) Enable TIM3 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; 
-    TIM3 -> PSC=999;
-    TIM3-> ARR =99;
-    
-    TIM3->CCMR1 |= (6 << TIM_CCMR1_OC1M_Pos) | (6 << TIM_CCMR1_OC2M_Pos);  // PWM Mode 1 for both channels
-    TIM3->CCMR1 |= TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE;  // Enable preload
 
-    // Enable Capture/Compare outputs
-    TIM3->CCER |= TIM_CCER_CC1E | TIM_CCER_CC2E;
+    // 2) Configure TIM3 PSC/ARR for ~800 Hz (or your desired frequency)
+    TIM3->PSC = 999;  // Prescaler
+    TIM3->ARR = 99;   // Auto-reload
 
-    // Enable TIM3 Counter
+    // 3) Configure CH3 & CH4 in PWM mode (CCMR2 controls channels 3 & 4)
+    //    We’ll set them both to PWM mode 1 (OCxM = 110 = 6)
+    // Channel 3
+    TIM3->CCMR2 &= ~((3 << 0) | (7 << 4)); // Clear CC3S and OC3M bits
+    TIM3->CCMR2 |= (6 << 4);              // PWM Mode 1 on CH3 (OC3M = 110)
+    TIM3->CCMR2 |= TIM_CCMR2_OC3PE;       // Preload enable for CCR3
+
+    // Channel 4
+    TIM3->CCMR2 &= ~((3 << 8) | (7 << 12)); 
+    TIM3->CCMR2 |= (6 << 12);             // PWM Mode 1 on CH4 (OC4M = 110)
+    TIM3->CCMR2 |= TIM_CCMR2_OC4PE;       // Preload enable for CCR4
+
+    // 4) Enable capture/compare outputs for channels 3 & 4 in CCER
+    TIM3->CCER |= TIM_CCER_CC3E | TIM_CCER_CC4E;
+
+    // 5) Optional: Set initial duty cycle, e.g., 20%
+    TIM3->CCR3 = (TIM3->ARR + 1) * 0.2f;
+    TIM3->CCR4 = (TIM3->ARR + 1) * 0.2f;
+
+    // 6) Finally, enable TIM3
     TIM3->CR1 |= TIM_CR1_CEN;
 
-
-       // Set duty cycle to 20% (CCR = ARR * 0.2)
-    /*
-       TIM3->CCR1 = (TIM3->ARR + 1) * 0.2; 
-    TIM3->CCR2 = (TIM3->ARR + 1) * 0.2;
-    */
-
-    //to meet 3.7    PC6 to 0.5 ad PC7 to .7
-    TIM3->CCR1 = (TIM3->ARR + 1) * 0.5; 
-    TIM3->CCR2 = (TIM3->ARR + 1) * 0.7;
-
-    //calling hal_gpio for pc6 and pc7
-    
-// Enable GPIOC clock
-RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
-
-// Set PC6 & PC7 to AF1 (TIM3_CH1 and TIM3_CH2)
-MY_HAL_GPIO_Init_AF(GPIOC, 6, 1);
-MY_HAL_GPIO_Init_AF(GPIOC, 7, 1);
-
+    // 7) Configure GPIO PC8 & PC9 for Alternate Function 1 (TIM3_CH3, TIM3_CH4)
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // Make sure GPIOC is enabled
+    MY_HAL_GPIO_Init_AF(GPIOC, 8, 1);   // PC8 -> AF1 (TIM3_CH3)
+    MY_HAL_GPIO_Init_AF(GPIOC, 9, 1);   // PC9 -> AF1 (TIM3_CH4)
 }
 
 
@@ -81,7 +81,7 @@ MY_HAL_GPIO_Init_AF(GPIOC, 7, 1);
 int lab3_main() {
     // Initialize timers, GPIO, etc.
     TIM3_Init();
-    TIM2_Init();
+
 
     // Main loop
     while (1) {

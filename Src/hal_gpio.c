@@ -130,22 +130,23 @@ void GPIO_Config(void) {
 //for lab3 3.6
 void MY_HAL_GPIO_Init_AF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t AF) {
     // Set pin mode to Alternate Function
-    GPIOx->MODER &= ~(3 << (GPIO_Pin * 2)); // Clear mode bits
-    GPIOx->MODER |= (2 << (GPIO_Pin * 2));  // Set to Alternate Function mode
+    GPIOx->MODER &= ~(3 << (GPIO_Pin * 2));  // Clear mode bits (2 bits per pin)
+    GPIOx->MODER |= (2 << (GPIO_Pin * 2));   // Set to Alternate Function mode
 
-    // Set output type to Push-Pull
+    // Set output type to Push-Pull (default, no need to set unless needed)
     GPIOx->OTYPER &= ~(1 << GPIO_Pin);
 
     // Set speed to High
     GPIOx->OSPEEDR |= (3 << (GPIO_Pin * 2));
 
-    // Select Alternate Function
+    // Select Alternate Function (AF)
     if (GPIO_Pin < 8) {
-        GPIOx->AFR[0] |= (AF << (GPIO_Pin * 4));
+        GPIOx->AFR[0] |= (AF << (GPIO_Pin * 4)); // AFR[0] for pins 0-7
     } else {
-        GPIOx->AFR[1] |= (AF << ((GPIO_Pin - 8) * 4));
+        GPIOx->AFR[1] |= (AF << ((GPIO_Pin - 8) * 4)); // AFR[1] for pins 8-15
     }
 }
+
 
 /*i moved these back to hal_nvic and hal_exti
 void NVIC_Config(void) {
