@@ -1,5 +1,5 @@
 //hal_exti.c and hal_nvic.c are part of lab2
-//this is a lab3
+//this is a lab3 with help of gpt 4o
 //i will keep any function inside of this file that is required to do lab 3
 
 //TIM2 for interrupts
@@ -44,6 +44,26 @@ void TIM3_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; 
     TIM3 -> PSC=999;
     TIM3-> ARR =99;
+    
+    TIM3->CCMR1 |= (6 << TIM_CCMR1_OC1M_Pos) | (6 << TIM_CCMR1_OC2M_Pos);  // PWM Mode 1 for both channels
+    TIM3->CCMR1 |= TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE;  // Enable preload
+
+    // Enable Capture/Compare outputs
+    TIM3->CCER |= TIM_CCER_CC1E | TIM_CCER_CC2E;
+
+    // Enable TIM3 Counter
+    TIM3->CR1 |= TIM_CR1_CEN;
+
+
+    //calling hal_gpio for pc6 and pc7
+    
+// Enable GPIOC clock
+RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+
+// Set PC6 & PC7 to AF1 (TIM3_CH1 and TIM3_CH2)
+MY_HAL_GPIO_Init_AF(GPIOC, 6, 1);
+MY_HAL_GPIO_Init_AF(GPIOC, 7, 1);
+
 }
 
 
