@@ -85,37 +85,42 @@ void GPIO_Init_TIM3_PWM(void)
     GPIOC->AFR[1] |= ((1 << (4 * 6)) | (1 << (4 * 7))); // Set AF1 (TIM3_CH3 and TIM3_CH4)
 }
 
-int lab3_main(void)
+void lab3_main(void)
 {
-    // Initialize HAL and system clock
+    // Initialize HAL and configure the system clock
     HAL_Init();
     SystemClock_Config();
 
-    // Initialize GPIO for PWM
+    // Set up GPIO for PWM output
     GPIO_Init_TIM3_PWM();
 
-    // Initialize TIM3 PWM
+    // Configure TIM3 for PWM functionality
     TIM3_Init();
 
-    // Main loop
+    int brightness = 0;  // Initial brightness level
+    int step = 5;        // Step size for brightness adjustment
+
+    // Infinite loop for smooth dimming and brightening
     while (1)
     {
-        // Smoothly increase and decrease brightness of the LEDs
-        for (uint16_t i = 0; i <= 100; i += 5)
+        // Update PWM duty cycle for both LEDs
+        TIM3->CCR1 = (brightness * TIM3->ARR) / 100;  // CH1 (Red LED, PWM Mode 1)
+        TIM3->CCR2 = (brightness * TIM3->ARR) / 100;  // CH2 (Blue LED, PWM Mode 1)
+
+        // Adjust brightness for next cycle
+        brightness += step;
+
+        // Reverse direction at brightness limits (0% and 100%)
+        if (brightness >= 100 || brightness <= 0)
         {
-            TIM3->CCR1 = (i * TIM3->ARR) / 100;  // CH1 (Red LED, PWM Mode 1)
-            TIM3->CCR2 = (i * TIM3->ARR) / 100;  // CH2 (Blue LED, PWM Mode 1)
-            HAL_Delay(50); // Delay for 50 ms
+            step = -step;  // Change direction
         }
 
-        for (uint16_t i = 100; i >= 0; i -= 5)
-        {
-            TIM3->CCR1 = (i * TIM3->ARR) / 100;  // CH1 (Red LED, PWM Mode 1)
-            TIM3->CCR2 = (i * TIM3->ARR) / 100;  // CH2 (Blue LED, PWM Mode 1)
-            HAL_Delay(50); // Delay for 50 ms
-        }
+        HAL_Delay(50);  // Control speed of dimming/brightening
     }
 }
+
+
 
 
 
