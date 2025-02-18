@@ -55,6 +55,11 @@ void TIM3_Init(void) {
     TIM3->CR1 |= TIM_CR1_CEN;
 
 
+       // Set duty cycle to 20% (CCR = ARR * 0.2)
+    TIM3->CCR1 = (TIM3->ARR + 1) * 0.2;
+    TIM3->CCR2 = (TIM3->ARR + 1) * 0.2;
+
+
     //calling hal_gpio for pc6 and pc7
     
 // Enable GPIOC clock
