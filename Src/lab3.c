@@ -42,6 +42,8 @@ void TIM2_Init(void) {
 //3.5
 void TIM3_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; 
+    TIM3 -> PSC=999;
+    TIM3-> ARR =99;
 }
 
 
