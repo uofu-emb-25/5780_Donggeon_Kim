@@ -29,14 +29,37 @@ uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 volatile uint32_t main_loop_tick = 0;  // Track time in main loop
 
 // 3.4 
-void TIM2_Init(void) {
+void TIM2_Init(void)
+{
+    // Enable TIM2 clock
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN; 
-    TIM2 ->PSC = 7999;
-    TIM2-> ARR =250;
 
+    // Set timer prescaler and auto-reload for 4Hz interrupt
+    TIM2->PSC = 7999; // 8MHz / (PSC + 1) = 1000 Hz
+    TIM2->ARR = 250;  // 1000 Hz / 250 = 4 Hz
+
+    // Enable update interrupt (UEV)
     TIM2->DIER |= TIM_DIER_UIE; 
+
+    // Enable TIM2 interrupt in NVIC
     NVIC_EnableIRQ(TIM2_IRQn);   
+
+    // Start the timer
     TIM2->CR1 |= TIM_CR1_CEN;   
+}
+
+void GPIO_Init_PC8_PC9(void)
+{
+    // Enable GPIOC clock
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+
+    // Set PC8 and PC9 as output mode
+    GPIOC->MODER &= ~((3 << (2 * 8)) | (3 << (2 * 9))); // Clear mode
+    GPIOC->MODER |= ((1 << (2 * 8)) | (1 << (2 * 9)));  // Set as output
+
+    // Initialize PC8 ON and PC9 OFF for alternating flash
+    GPIOC->ODR |= GPIO_PIN_8;
+    GPIOC->ODR &= ~GPIO_PIN_9;
 }
 
 //3.5
@@ -90,10 +113,11 @@ void lab3_main(void)
     // Initialize HAL and configure the system clock
     HAL_Init();
     SystemClock_Config();
-
+    //for orange and green section for screenshot
+    //GPIO_Init_PC8_PC9();
     // Set up GPIO for PWM output
     GPIO_Init_TIM3_PWM();
-
+ //   TIM2_Init();
     // Configure TIM3 for PWM functionality
     TIM3_Init();
 
