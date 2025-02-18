@@ -56,9 +56,14 @@ void TIM3_Init(void) {
 
 
        // Set duty cycle to 20% (CCR = ARR * 0.2)
-    TIM3->CCR1 = (TIM3->ARR + 1) * 0.2;
+    /*
+       TIM3->CCR1 = (TIM3->ARR + 1) * 0.2; 
     TIM3->CCR2 = (TIM3->ARR + 1) * 0.2;
+    */
 
+    //to meet 3.7    PC6 to 0.5 ad PC7 to .7
+    TIM3->CCR1 = (TIM3->ARR + 1) * 0.5; 
+    TIM3->CCR2 = (TIM3->ARR + 1) * 0.7;
 
     //calling hal_gpio for pc6 and pc7
     
@@ -74,8 +79,22 @@ MY_HAL_GPIO_Init_AF(GPIOC, 7, 1);
 
 
 int lab3_main() {
-    //led output
-    //expected output is to have a led lighted up
+    // Initialize timers, GPIO, etc.
+    TIM3_Init();
+    TIM2_Init();
+
+    // Main loop
+    while (1) {
+        // Cycle through different duty cycles
+        for (float duty = 0.1f; duty <= 1.0f; duty += 0.1f) {
+            // Update duty cycle on each cycle
+            TIM3->CCR1 = (TIM3->ARR + 1) * duty;  // Adjust duty cycle for CH1 (PC6)
+            TIM3->CCR2 = (TIM3->ARR + 1) * duty;  // Adjust duty cycle for CH2 (PC7)
+            HAL_Delay(500);  // Wait for 500 ms to see change
+        }
+    }
+
+
     return 0;
 }
 

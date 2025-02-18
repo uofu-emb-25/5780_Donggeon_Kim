@@ -127,7 +127,7 @@ void GPIO_Config(void) {
     GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
 }
 
-//for lab3
+//for lab3 3.6
 void MY_HAL_GPIO_Init_AF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t AF) {
     // Set pin mode to Alternate Function
     GPIOx->MODER &= ~(3 << (GPIO_Pin * 2)); // Clear mode bits
