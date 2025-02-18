@@ -121,6 +121,18 @@ void TIM2_IRQHandler(void) {
   }
 }
 
+//lab4
+//interrupt hanlder
+volatile char received_char;
+volatile int new_data = 0;
+
+void USART3_IRQHandler(void) {
+    if (USART3->ISR & USART_ISR_RXNE) {  // receiving done - confirmimg
+        received_char = USART3->RDR;  // data storing
+        new_data = 1;  // new data flags setting
+    }
+}
+
 
 
 /******************************************************************************/

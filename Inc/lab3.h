@@ -1,5 +1,5 @@
-#ifndef LAB2_H
-#define LAB2_H
+#ifndef LAB3_H
+#define LAB3_H
 
 int lab3_main(void);
 
