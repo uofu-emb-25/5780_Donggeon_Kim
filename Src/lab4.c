@@ -30,29 +30,54 @@ uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 // Define baud rate
 #define BAUD_RATE 115200
 #define SYS_CLOCK 8000000  // Assuming an 8 MHz clock
-
 void USART3_Init(void) {
-    // 1. Enable USART3 Clock (APB1)
-    RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
-    
-    // 2. Enable GPIOB Clock
-    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
-    
-    // 3. Configure PB10 (TX) & PB11 (RX) to Alternate Function mode
-    GPIOB->MODER &= ~((3 << (10 * 2)) | (3 << (11 * 2))); // Clear mode bits
-    GPIOB->MODER |= (2 << (10 * 2)) | (2 << (11 * 2));    // Set to AF mode
+    // 1. Turn on power for USART3 (so it works)
+    RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  // Give USART3 power
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;  // Also turn on power for GPIOB (used for TX/RX)
 
-    // 4. Set PB10 and PB11 to AF4 (USART3)
-    GPIOB->AFR[1] |= (4 << ((10 - 8) * 4)) | (4 << ((11 - 8) * 4));
+    // 2. Set PB10 (TX) and PB11 (RX) to "special mode" (Alternate Function)
+    GPIOB->MODER &= ~((3 << (10 * 2)) | (3 << (11 * 2)));  // Clear old settings
+    GPIOB->MODER |= (2 << (10 * 2)) | (2 << (11 * 2));  // Set to AF mode (needed for USART)
 
-    // 5. Configure USART3 Baud Rate (BRR)
-    USART3->BRR = SYS_CLOCK / BAUD_RATE;  // 8000000 / 115200 ≈ 69
+    // 3. Tell PB10 and PB11 to act like USART3 (AF4)
+    GPIOB->AFR[1] |= (4 << ((10 - 8) * 4)) | (4 << ((11 - 8) * 4));  // "AF4" is USART3's setting
 
-    // 6. Enable USART3 transmitter and receiver
-    USART3->CR1 |= USART_CR1_TE | USART_CR1_RE; 
+    // 4. Set how fast USART should talk (baud rate)
+    USART3->BRR = SYS_CLOCK / BAUD_RATE;  // Example: 8,000,000 / 115200 = ~69
 
-    // 7. Enable USART3
-    USART3->CR1 |= USART_CR1_UE; 
+    // 5. Turn on TX (send) and RX (receive) so it can talk & listen
+    USART3->CR1 |= USART_CR1_TE | USART_CR1_RE;
+
+    // 6. Tell USART3 to shout when it gets data (enable RX interrupt)
+    USART3->CR1 |= USART_CR1_RXNEIE;  // "RXNEIE" = "Receive Data Not Empty Interrupt"
+
+    // 7. Tell the CPU to listen for USART3 (turn on interrupt in NVIC)
+    NVIC_EnableIRQ(USART3_4_IRQn);  // Let USART3 interrupts happen
+    NVIC_SetPriority(USART3_4_IRQn, 1);  // Set priority (1 means "not super important")
+
+    // 8. Finally, turn USART3 ON!
+    USART3->CR1 |= USART_CR1_UE;  // "UE" = "USART Enable"
+}
+
+void USART3_4_IRQHandler(void) {
+    // Check if USART3 got a new letter
+    if (USART3->ISR & USART_ISR_RXNE) {  
+        char received = USART3->RDR;  // Grab the letter (clears the flag)
+
+        // Send back the letter (echo)
+        USART_SendChar(received);
+        
+        // Do something if it's 'r' or 'b' (turn LEDs on/off)
+        if (received == 'r') {
+            ToggleRedLED();  // Flip Red LED on/off
+            USART_SendString("Red LED toggled.");  // Tell the user
+        } else if (received == 'b') {
+            ToggleBlueLED();  // Flip Blue LED on/off
+            USART_SendString("Blue LED toggled.");  // Tell the user
+        } else {
+            USART_SendString("Unknown command.");  // Confused? Tell the user!
+        }
+    }
 }
 
 char USART3_ReceiveChar(void) {
@@ -76,12 +101,14 @@ void USART_SendChar(char c) {
 }
 
 void USART_SendString(const char *str) {
+    if (!str) return;
     while (*str) {
         USART_SendChar(*str++);
     }
-    USART_SendChar('\r'); 
+    USART_SendChar('\r');
     USART_SendChar('\n');
 }
+
 
 
 /* Toggle Red LED (PC6) */
