@@ -79,6 +79,11 @@ void USART3_4_IRQHandler(void) {
         }
     }
 }
+//To make it recognize lower==upper
+char to_lower(char c) {
+    return (c >= 'A' && c <= 'Z') ? (c + 32) : c;
+}
+
 
 char USART3_ReceiveChar(void) {
     while (!(USART3->ISR & USART_ISR_RXNE));  // Wait for RX buffer to be full
@@ -127,22 +132,24 @@ void GPIO_Init(void) {
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 }
 
+
+void LED_Control(char led, char command) {
+    uint16_t pin = (led == 'r') ? (1 << 6) : (led == 'b') ? (1 << 7) : 0;
+    if (pin) {
+        if (command == '0') GPIOC->BSRR = pin << 16;  // Turn Off
+        else if (command == '1') GPIOC->BSRR = pin;   // Turn On
+        else if (command == '2') GPIOC->ODR ^= pin;   // Toggle
+    }
+}
+
+
 void lab4_main(void)
 {
     
-    char received;
-    USART3_Init();
-    HAL_Init();
-
     while (1) {
-        received = USART3_ReceiveChar();
-        if (received == 'r') {
-            ToggleRedLED();
-        } else if (received == 'b') {
-            ToggleBlueLED();
-        } else {
-            USART_SendString("Error: Unknown command\r\n");
-        }
+        USART_SendString("CMD?");
+        char received = USART3_ReceiveChar();
+        LED_Control(received, USART3_ReceiveChar());
     }
 }
     
