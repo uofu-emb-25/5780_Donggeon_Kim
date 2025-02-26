@@ -6,6 +6,7 @@
 
 #include "stm32f072xb.h"
 #include "system_setup.h"
+#include <stdbool.h> //need for true false boolean
 
 #include <assert.h>
 
@@ -60,16 +61,26 @@ char USART3_ReceiveChar(void) {
 }
 
 
+bool USART3_ReceiveCharTimeout(char *c, uint32_t timeout) {
+    while (!(USART3->ISR & USART_ISR_RXNE) && timeout--);
+    if (timeout == 0) return false;
+    *c = USART3->RDR;
+    return true;
+}
+
+
 
 void USART_SendChar(char c) {
     while (!(USART3->ISR & USART_ISR_TXE)); // wait until TXE bit become 1 
     USART3->TDR = c; // data receiving 
 }
 
-void USART_SendString(char *str) {
+void USART_SendString(const char *str) {
     while (*str) {
         USART_SendChar(*str++);
     }
+    USART_SendChar('\r'); 
+    USART_SendChar('\n');
 }
 
 
