@@ -6,12 +6,9 @@
 
 #include "stm32f072xb.h"
 #include "system_setup.h"
-#include <stm32f0xx_hal.h>
+
 #include <assert.h>
 
-#include "hal_gpio.h"
-#include "hal_exti.h"
-#include "hal_nvic.h"
 
 extern void SystemClock_Config(void);
 
