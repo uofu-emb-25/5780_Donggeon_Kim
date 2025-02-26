@@ -153,6 +153,31 @@ void MY_HAL_GPIO_Init_AF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t AF) {
     }
 }
 
+//lab4 UART
+void UART_GPIO_Init_AF(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t AF) {
+    // 1. Configure the pin to Alternate Function mode
+    GPIOx->MODER &= ~(3 << (GPIO_Pin * 2));  
+    GPIOx->MODER |=  (2 << (GPIO_Pin * 2));  
+
+    // 2. Output type = Push-Pull
+    GPIOx->OTYPER &= ~(1 << GPIO_Pin);
+
+    // 3. Speed = High
+    GPIOx->OSPEEDR |= (3 << (GPIO_Pin * 2));
+
+    // 4. Clear old AF bits, then set new AF bits
+    if (GPIO_Pin < 8) {
+        // Clear bits
+        GPIOx->AFR[0] &= ~(0xF << (GPIO_Pin * 4));
+        // Set bits
+        GPIOx->AFR[0] |= (AF << (GPIO_Pin * 4));
+    } else {
+        // Clear bits
+        GPIOx->AFR[1] &= ~(0xF << ((GPIO_Pin - 8) * 4));
+        // Set bits
+        GPIOx->AFR[1] |= (AF << ((GPIO_Pin - 8) * 4));
+    }
+}
 
 /*i moved these back to hal_nvic and hal_exti
 void NVIC_Config(void) {
