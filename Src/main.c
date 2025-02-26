@@ -26,7 +26,8 @@ int main(void) {
        //return lab2_part1_main();
        //return lab2_part2_main();
        //return lab3_main();
-       return lab4_main();
+       lab4_main();
+       return 0;
 }
 
 

@@ -4,4 +4,3 @@
 int lab2_main(void);
 
 #endif
-8
