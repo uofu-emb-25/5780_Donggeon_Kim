@@ -104,6 +104,7 @@ void USART3_4_IRQHandler_part1(void) {
     }
 }
 
+
 void USART3_4_IRQHandler_part2(void) {
     if (USART3->ISR & USART_ISR_RXNE) {  
         char temp_char = USART3->RDR;  // Read received character
@@ -318,4 +319,30 @@ void lab4_main_part1() {
     }
 }
 
+// first time read led color r or b
+// second time read command 1 or 0
+void lab4_main_part2() {
+    char led, command;
+    while (1) {
+        if (new_data_available) {
+            new_data_available = false;  
+            led = received_char;  
 
+            if (led != 'r' && led != 'b') {
+                USART_SendString("Error: use r or b\r\n");
+                continue;
+            }
+
+            while (!new_data_available);  
+            new_data_available = false;  
+            command = received_char;  
+
+            if (command != '0' && command != '1') {
+                USART_SendString("Error: use 0 or 1\r\n");
+                continue;
+            }
+
+            LED_Control(led, command);
+        }
+    }
+}

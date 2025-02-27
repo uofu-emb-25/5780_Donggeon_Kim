@@ -26,8 +26,9 @@ int main(void) {
        //return lab2_part1_main();
        //return lab2_part2_main();
        //return lab3_main();
-       //lab4_main();
-       lab4_main_part1();
+       //lab4_main(); this is for r and b testing
+       //lab4_main_part1(); for check off 1
+       lab4_main_part2();
        return 0;
 }
 
