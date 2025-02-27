@@ -327,6 +327,7 @@ void lab4_main_part2() {
         if (new_data_available) {
             new_data_available = false;  
             led = received_char;  
+            received_char = 0;  // **Reset old data before reading the second input**
 
             if (led != 'r' && led != 'b') {
                 USART_SendString("Error: use r or b\r\n");
@@ -336,6 +337,7 @@ void lab4_main_part2() {
             while (!new_data_available);  
             new_data_available = false;  
             command = received_char;  
+            received_char = 0;  // **Reset again before next loop**
 
             if (command != '0' && command != '1') {
                 USART_SendString("Error: use 0 or 1\r\n");
