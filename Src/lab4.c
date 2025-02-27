@@ -83,45 +83,39 @@ char to_lower(char c) {
 volatile char received_char = 0;  // Store received character
 
 volatile bool new_data_available = false;  // Flag for new data availability
+volatile char uart_buffer[2];
+volatile uint8_t uart_rx_index = 0;
+
 void USART3_4_IRQHandler(void) {
-    if (USART3->ISR & USART_ISR_RXNE) {  
-        char temp_char = USART3->RDR;  // Read received character
+    if (USART3->ISR & USART_ISR_RXNE) {
+        char temp_char = USART3->RDR;
 
-        // Ignore unwanted characters (newline and carriage return)
         if (temp_char == '\r' || temp_char == '\n') {
-            return;
+            return; // ignore newline and carriage returns
         }
 
-        // Only store a new character if none is waiting to be processed
-        if (!new_data_available) {  
+        if (!new_data_available) {
             received_char = temp_char;
-            new_data_available = true;  // Mark as new data available
+            new_data_available = true;
         }
 
-        //  Clear possible UART errors to prevent multiple triggers
-        USART3->ICR |= USART_ICR_ORECF;  // Overrun error
-        USART3->ICR |= USART_ICR_FECF;   // Framing error
-        USART3->ICR |= USART_ICR_PECF;   // Parity error
+        USART3->ICR |= USART_ICR_ORECF | USART_ICR_FECF | USART_ICR_PECF;
     }
 }
 
-
 bool USART3_ReceiveCharTimeout(char *c, uint32_t timeout) {
-    // Wait for a NEW character (not the previously received one)
-    while (!new_data_available && timeout--); 
-    if (timeout == 0) return false;
-
-    new_data_available = false;  //  Reset flag since we've processed the data
-    *c = received_char;  //  Store the new character
-
-    // Ignore unwanted newline and carriage return characters
-    if (*c == '\r' || *c == '\n') {
-        return false;
+    uint32_t count = timeout;
+    while (!(USART3->ISR & USART_ISR_RXNE) && count--) {
+        __NOP();  // Small delay
     }
+    if (count == 0) return false;
+
+    *c = USART3->RDR;
+
+    if (*c == '\r' || *c == '\n') return false;
 
     return true;
 }
-
 
 
 char USART3_ReceiveChar(void) {
@@ -235,43 +229,65 @@ void lab4_main_part1() {
     USART_SendString("USART Ready. Enter LED commands (e.g., r1 for Red ON, b0 for Blue OFF):\r\n");
 
     while (1) {
-        if (new_data_available) {  // Check if new data was received
-            new_data_available = false;  // Reset flag
+        if (new_data_available) {  
+            new_data_available = false; // Reset flag **before processing**
             
-            char led = received_char;  //  Store first character (`r` or `b`)
-            
-            // Debugging: Print what was received
-            char debug_msg[30];
-            sprintf(debug_msg, "First char: %c\r\n", led);
-            USART_SendString(debug_msg);
+            char led = received_char;  //  First character (e.g., 'r' or 'b')
+            received_char = 0; // **Reset to ensure fresh input for second character**
 
-            // Ensure it's a valid LED command character
-            if (led != 'r' && led != 'b') {
-                USART_SendString("Error: Use 'r' or 'b' for LED control.\r\n");
+            //  Ignore newline, carriage return, and unwanted characters
+            if (led == '\r' || led == '\n' || led == ' ') {
                 continue;
             }
 
-            //  Wait for second character
-            char command;
-            if (USART3_ReceiveCharTimeout(&command, 500000)) { // Wait for second character
-                //  Debugging: Print the second character
-                sprintf(debug_msg, "Second char: %c\r\n", command);
-                USART_SendString(debug_msg);
+            //  Debugging: Show first character received
+            char debug_msg[40];
+            sprintf(debug_msg, "First char received: %c\r\n", led);
+            USART_SendString(debug_msg);
 
-                // Ensure second character is valid (0 or 1)
-                if (command != '0' && command != '1') {
-                    USART_SendString("Error: Invalid command! Use 0 or 1.\r\n");
-                    continue;
-                }
-
-                char response[50];
-                sprintf(response, "Received: %c%c\r\n", led, command);
-                USART_SendString(response);
-
-                LED_Control(led, command);
-            } else {
-                USART_SendString("Error: Command timeout! Enter two characters.\r\n");
+            //  Ensure first char is 'r' or 'b'
+            if (led != 'r' && led != 'b') {
+                USART_SendString("Error: First input must be 'r' or 'b'.\r\n");
+                continue;
             }
+
+            //  **Force UART to wait for the second character**
+            char command = 0;
+            if (!USART3_ReceiveCharTimeout(&command, 1000000)) { // **Wait for second input**
+                USART_SendString("Error: Timeout waiting for second input.\r\n");
+                continue;
+            }
+
+            //  Ignore newlines or unwanted characters
+            if (command == '\r' || command == '\n' || command == ' ') {
+                continue;
+            }
+
+            //  Debugging: Show second character received
+            sprintf(debug_msg, "Second char received: %c\r\n", command);
+            USART_SendString(debug_msg);
+
+            //  **Ensure second char is '0' or '1'**
+            if (command != '0' && command != '1') {
+                USART_SendString("Error: Second input must be '0' or '1'.\r\n");
+
+                // **Prevent bad input from carrying over**
+                received_char = 0;  
+                new_data_available = false;
+                continue;
+            }
+
+            //  Format response string
+            char response[20];
+            sprintf(response, "Received: %c%c\r\n", led, command);
+            USART_SendString(response);
+
+            //  Control LED based on input
+            LED_Control(led, command);
+
+            //  **Ensure no old data is left**
+            received_char = 0;  
+            new_data_available = false;
         }
     }
 }
