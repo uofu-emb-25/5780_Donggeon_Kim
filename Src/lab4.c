@@ -82,12 +82,7 @@ char to_lower(char c) {
 }
 
 
-void USART3_4_IRQHandler(void) {
-    if (USART3->ISR & USART_ISR_RXNE) {  
-        char received = USART3->RDR;  // Read received character
-        USART_SendChar(received);  // Echo back to PuTTY
-    }
-}
+
 volatile char received_char;  // Store received character globally
 
 void USART3_4_IRQHandler(void) {
