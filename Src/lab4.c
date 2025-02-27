@@ -44,17 +44,17 @@ void GPIO_Init(void);
 #define BAUD_RATE 115200
 #define SYS_CLOCK 8000000  // Assuming an 8 MHz clock
 void USART3_Init(void) {
-    // Enable clocks for USART3 and GPIOB
+    // Enable clocks for USART3 and GPIOC (not GPIOB)
     RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  
-    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;  
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  
 
-    
     // Set PC4 (TX) and PC5 (RX) to "Alternate Function"
-    GPIOC->MODER &= ~((3 << (4 * 2)) | (3 << (5 * 2)));  
-    GPIOC->MODER |= (2 << (4 * 2)) | (2 << (5 * 2));  
+    GPIOC->MODER &= ~((3 << (4 * 2)) | (3 << (5 * 2)));  // Clear mode bits
+    GPIOC->MODER |= (2 << (4 * 2)) | (2 << (5 * 2));  // Set to Alternate Function (10)
 
-    // Set PB10 and PB11 to AF4 (USART3)
-    GPIOB->AFR[1] |= (4 << ((10 - 8) * 4)) | (4 << ((11 - 8) * 4));
+    // Set PC4 and PC5 to AF1 (USART3)
+    GPIOC->AFR[0] &= ~((0xF << (4 * 4)) | (0xF << (5 * 4)));  // Clear previous AF settings
+    GPIOC->AFR[0] |= (1 << (4 * 4)) | (1 << (5 * 4));  // Set AF1 (USART3)
 
     // Configure USART3 baud rate
     USART3->BRR = SYS_CLOCK / BAUD_RATE;  
@@ -71,9 +71,8 @@ void USART3_Init(void) {
     if (!(USART3->CR1 & USART_CR1_UE)) {
         USART_SendString("USART3 NOT ENABLED!");
     }
-    
-    
 }
+
 
 
 
