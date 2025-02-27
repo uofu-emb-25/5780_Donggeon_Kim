@@ -27,4 +27,6 @@ void LED_Control(char led, char command);    // Control LEDs based on command
 // Main Lab4 Function
 void lab4_main(void);                        // Entry function for Lab 4
 void lab4_main_part1(void);
+void lab4_main_part2(void);
+
 #endif // LAB4_H

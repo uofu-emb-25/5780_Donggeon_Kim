@@ -25,7 +25,8 @@ void MY_HAL_GPIO_TogglePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 uint8_t MY_HAL_GPIO_ReadPin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 
 void USART3_Init(void);
-void USART3_4_IRQHandler(void);
+void USART3_4_IRQHandler_part1(void);
+void USART3_4_IRQHandler_part2(void);
 char to_lower(char c);
 void USART_SendChar(char c);
 void USART_SendString(const char *str);
@@ -86,7 +87,7 @@ volatile bool new_data_available = false;  // Flag for new data availability
 volatile char uart_buffer[2];
 volatile uint8_t uart_rx_index = 0;
 
-void USART3_4_IRQHandler(void) {
+void USART3_4_IRQHandler_part1(void) {
     if (USART3->ISR & USART_ISR_RXNE) {
         char temp_char = USART3->RDR;
 
@@ -99,6 +100,31 @@ void USART3_4_IRQHandler(void) {
             new_data_available = true;
         }
 
+        USART3->ICR |= USART_ICR_ORECF | USART_ICR_FECF | USART_ICR_PECF;
+    }
+}
+
+void USART3_4_IRQHandler_part2(void) {
+    if (USART3->ISR & USART_ISR_RXNE) {  
+        char temp_char = USART3->RDR;  // Read received character
+
+        // Ignore unwanted characters (newline and carriage return)
+        if (temp_char == '\r' || temp_char == '\n') {
+            return;
+        }
+
+        // Store received character in buffer
+        uart_buffer[uart_rx_index] = temp_char;
+
+        // If it's the second character, set flag for main loop
+        if (uart_rx_index == 1) {
+            new_data_available = true;
+            uart_rx_index = 0;  // Reset index after full command received
+        } else {
+            uart_rx_index++;  // Move to next character
+        }
+
+        // Clear UART errors (if any)
         USART3->ICR |= USART_ICR_ORECF | USART_ICR_FECF | USART_ICR_PECF;
     }
 }
@@ -291,3 +317,5 @@ void lab4_main_part1() {
         }
     }
 }
+
+
