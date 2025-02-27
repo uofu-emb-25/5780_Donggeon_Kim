@@ -197,28 +197,35 @@ void lab4_main_part1() {
 }
 // Checkoff 2 - Read Both Inputs at Once
 void lab4_main_part2() {
-    USART3_Init(2);
+    USART3_Init(2);  // Use IRQ mode for Part 2
     GPIO_Init();
 
+    USART_SendString("USART Ready. Enter two-character LED command (e.g., r1, b0, r2):");
+
     while (1) {
-        if (new_data_available) {
+        if (new_data_available) {  // When both characters are received
             new_data_available = false;
-            char led = uart_buffer[0];
+            char led = uart_buffer[0];  
             char command = uart_buffer[1];
 
+            //  Validate LED input
             if (led != 'r' && led != 'b') {
-                USART_SendString("Error: First input must be 'r' or 'b'.");
+                USART_SendString(" Error: First input must be 'r' or 'b'.");
                 continue;
             }
 
-            if (command != '0' && command != '1') {
-                USART_SendString("Error: Second input must be '0' or '1'.");
+            //  Validate Command (0, 1, or 2)
+            if (command != '0' && command != '1' && command != '2') {
+                USART_SendString(" Error: Second input must be '0', '1', or '2'.");
                 continue;
             }
 
-            char response[20];
-            sprintf(response, "Received: %c%c", led, command);
+            //  Show received input
+            char response[30];
+            sprintf(response, "✅ Received: %c%c", led, command);
             USART_SendString(response);
+
+            //  Perform LED action (ON, OFF, TOGGLE)
             LED_Control(led, command);
         }
     }
