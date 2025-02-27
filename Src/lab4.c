@@ -120,20 +120,28 @@ void GPIO_Init(void) {
 //  LED Control Based on Input
 void LED_Control(char led, char command) {
     uint16_t pin = (led == 'r') ? (1 << 6) : (led == 'b') ? (1 << 7) : 0;
-    if (pin) {  
+    
+    if (pin) {  // Ensure 'r' or 'b' was provided
         if (command == '0') {
-            GPIOC->BSRR = pin << 16;
+            GPIOC->BSRR = pin << 16;  // Turn Off
             USART_SendString((led == 'r') ? "Red LED OFF!" : "Blue LED OFF!");
-        } else if (command == '1') {
-            GPIOC->BSRR = pin;
+        } 
+        else if (command == '1') {
+            GPIOC->BSRR = pin;   // Turn On
             USART_SendString((led == 'r') ? "Red LED ON!" : "Blue LED ON!");
-        } else {
-            USART_SendString("Error: Invalid command! Use 0 or 1.");
+        } 
+        else if (command == '2') {
+            GPIOC->ODR ^= pin;   //  TOGGLE LED using XOR
+            USART_SendString((led == 'r') ? "Red LED Toggled!" : "Blue LED Toggled!");
+        } 
+        else {
+            USART_SendString("Error: Invalid command! Use 0, 1, or 2.");
         }
     } else {
         USART_SendString("Error: Use 'r' or 'b' for LED control.");
     }
 }
+
 
 // Checkoff 1 - Read LED Color First, Then Command
 void lab4_main_part1() {
@@ -222,7 +230,7 @@ void lab4_main_part2() {
 
             //  Show received input
             char response[30];
-            sprintf(response, "✅ Received: %c%c", led, command);
+            sprintf(response, " Received: %c%c", led, command);
             USART_SendString(response);
 
             //  Perform LED action (ON, OFF, TOGGLE)
