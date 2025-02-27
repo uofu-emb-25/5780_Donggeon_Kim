@@ -48,9 +48,10 @@ void USART3_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  
     RCC->AHBENR |= RCC_AHBENR_GPIOBEN;  
 
-    // Set PB10 (TX) and PB11 (RX) to "Alternate Function"
-    GPIOB->MODER &= ~((3 << (10 * 2)) | (3 << (11 * 2)));  
-    GPIOB->MODER |= (2 << (10 * 2)) | (2 << (11 * 2));  
+    
+    // Set PC4 (TX) and PC5 (RX) to "Alternate Function"
+    GPIOC->MODER &= ~((3 << (4 * 2)) | (3 << (5 * 2)));  
+    GPIOC->MODER |= (2 << (4 * 2)) | (2 << (5 * 2));  
 
     // Set PB10 and PB11 to AF4 (USART3)
     GPIOB->AFR[1] |= (4 << ((10 - 8) * 4)) | (4 << ((11 - 8) * 4));
