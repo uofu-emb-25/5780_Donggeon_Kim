@@ -79,17 +79,15 @@ void USART3_4_IRQHandler(void) {
 }
 
 bool USART3_ReceiveCharTimeout(char *c, uint32_t timeout) {
-    uint32_t count = timeout;
-    while (!(USART3->ISR & USART_ISR_RXNE) && count--) {
-        __NOP();  // Small delay
+    while (timeout--) {
+        if (new_data_available) { // Check if data is ready from IRQ handler
+            new_data_available = false;  // Reset flag
+            *c = received_char;  // Store received character
+            return true; // Successfully received character
+        }
+        __NOP(); // Small delay to avoid CPU overuse
     }
-    if (count == 0) return false; // Timeout reached, return false
-
-    *c = USART3->RDR;  // Read received character
-
-    if (*c == '\r' || *c == '\n') return false; // Ignore newline characters
-
-    return true; // Successfully received a character
+    return false; // Timeout occurred
 }
 
 //  USART Functions
