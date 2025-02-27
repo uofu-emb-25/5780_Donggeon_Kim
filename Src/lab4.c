@@ -82,14 +82,15 @@ char to_lower(char c) {
 
 volatile char received_char = 0;  // Store received character
 
+volatile bool new_data_available = false;  // Flag for new data availability
+
 void USART3_4_IRQHandler(void) {
     if (USART3->ISR & USART_ISR_RXNE) {  
         received_char = USART3->RDR;  // Read received character
-        USART_SendString("Received: ");
-        USART_SendChar(received_char);  
-        USART_SendChar('\n');  
+        new_data_available = true;    // Set flag to indicate data is ready
     }
 }
+
 
 
 
@@ -136,8 +137,14 @@ void ToggleBlueLED(void) {
 
 // GPIOC clock enable part
 void GPIO_Init(void) {
-    // Enable GPIOC clock
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  
+
+    // Set PC6 and PC7 as output mode (01)
+    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2))); // Clear bits
+    GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2));    // Set as output mode
+
+    // Ensure LEDs are OFF initially
+    GPIOC->BSRR = (1 << (6 + 16)) | (1 << (7 + 16));
 }
 
 
@@ -168,35 +175,34 @@ void lab4_main(void)
 }
   */  
  void lab4_main() {
-    USART3_Init(); // Ensure USART3 is initialized
-    GPIO_Init();   // Enable GPIO for LED control
+    USART3_Init();
+    GPIO_Init();
 
     USART_SendString("USART Ready. Type 'r' for Red LED, 'b' for Blue LED:\r\n");
 
     while (1) {
-        char received = USART3_ReceiveChar(); // Blocking receive
+        if (new_data_available) {  // Check if new data was received
+            new_data_available = false;  // Reset flag
 
-        USART_SendString("Received: ");
-        USART_SendChar(received);
-        USART_SendChar('\r');
-        USART_SendChar('\n');
+            // Ignore unwanted newline and carriage return
+            if (received_char == '\r' || received_char == '\n') {
+                continue;  // Ignore and keep looping
+            }
 
-        if (received == 'r') {
-            ToggleRedLED();
-            USART_SendString("Red LED Toggled!\r\n");
-        } else if (received == 'b') {
-            ToggleBlueLED();
-            USART_SendString("Blue LED Toggled!\r\n");
-        } else {
-            USART_SendString("Error: Invalid Command! Use 'r' or 'b'.\r\n");
+            USART_SendString("Received: ");
+            USART_SendChar(received_char);
+            USART_SendChar('\r');
+            USART_SendChar('\n');
+
+            if (received_char == 'r') {
+                ToggleRedLED();
+                USART_SendString("Red LED Toggled!\r\n");
+            } else if (received_char == 'b') {
+                ToggleBlueLED();
+                USART_SendString("Blue LED Toggled!\r\n");
+            } else {
+                USART_SendString("Error: Invalid Command! Use 'r' or 'b'.\r\n");
+            }
         }
     }
 }
-
-
-
-
-
-
-   
-
