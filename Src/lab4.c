@@ -100,6 +100,11 @@ bool USART3_ReceiveCharTimeout(char *c, uint32_t timeout) {
     return true;
 }
 
+char USART3_ReceiveChar(void) {
+    while (!(USART3->ISR & USART_ISR_RXNE)); // Wait until a character is received
+    return USART3->RDR;  // Read received character
+}
+
 
 
 void USART_SendChar(char c) {
@@ -110,10 +115,12 @@ void USART_SendChar(char c) {
 void USART_SendString(const char *str) {
     if (!str) return;
     while (*str) {
-        USART_SendChar(*str++);
+        USART_SendChar(*str++);  // Send each character
     }
-    USART_SendChar('\n');  // Only newline
+    USART_SendChar('\r');  // Carriage return
+    USART_SendChar('\n');  // Newline
 }
+
 
 
 
@@ -162,14 +169,29 @@ void lab4_main(void)
   */  
  void lab4_main() {
     USART3_Init(); // Ensure USART3 is initialized
-    USART_SendString("USART Debug: STM32 is running...\n");
-    
+    GPIO_Init();   // Enable GPIO for LED control
+
+    USART_SendString("USART Ready. Type 'r' for Red LED, 'b' for Blue LED:\r\n");
+
     while (1) {
-        USART_SendString("Testing UART output...\n");
-        for (volatile int i = 0; i < 1000000; i++); // Small delay
+        char received = USART3_ReceiveChar(); // Blocking receive
+
+        USART_SendString("Received: ");
+        USART_SendChar(received);
+        USART_SendChar('\r');
+        USART_SendChar('\n');
+
+        if (received == 'r') {
+            ToggleRedLED();
+            USART_SendString("Red LED Toggled!\r\n");
+        } else if (received == 'b') {
+            ToggleBlueLED();
+            USART_SendString("Blue LED Toggled!\r\n");
+        } else {
+            USART_SendString("Error: Invalid Command! Use 'r' or 'b'.\r\n");
+        }
     }
 }
-
 
 
 
