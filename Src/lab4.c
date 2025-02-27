@@ -43,18 +43,19 @@ void GPIO_Init(void);
 // Define baud rate
 #define BAUD_RATE 115200
 #define SYS_CLOCK 8000000  // Assuming an 8 MHz clock
+
 void USART3_Init(void) {
-    // Enable clocks for USART3 and GPIOC (not GPIOB)
+    // Enable clocks for USART3 and GPIOC
     RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  
 
     // Set PC4 (TX) and PC5 (RX) to "Alternate Function"
-    GPIOC->MODER &= ~((3 << (4 * 2)) | (3 << (5 * 2)));  // Clear mode bits
-    GPIOC->MODER |= (2 << (4 * 2)) | (2 << (5 * 2));  // Set to Alternate Function (10)
+    GPIOC->MODER &= ~((3 << (4 * 2)) | (3 << (5 * 2)));  
+    GPIOC->MODER |= (2 << (4 * 2)) | (2 << (5 * 2));  
 
     // Set PC4 and PC5 to AF1 (USART3)
-    GPIOC->AFR[0] &= ~((0xF << (4 * 4)) | (0xF << (5 * 4)));  // Clear previous AF settings
-    GPIOC->AFR[0] |= (1 << (4 * 4)) | (1 << (5 * 4));  // Set AF1 (USART3)
+    GPIOC->AFR[0] &= ~((0xF << (4 * 4)) | (0xF << (5 * 4)));  
+    GPIOC->AFR[0] |= (1 << (4 * 4)) | (1 << (5 * 4));  
 
     // Configure USART3 baud rate
     USART3->BRR = SYS_CLOCK / BAUD_RATE;  
@@ -68,9 +69,6 @@ void USART3_Init(void) {
 
     // Enable USART3
     USART3->CR1 |= USART_CR1_UE;
-    if (!(USART3->CR1 & USART_CR1_UE)) {
-        USART_SendString("USART3 NOT ENABLED!");
-    }
 }
 
 
@@ -82,13 +80,14 @@ char to_lower(char c) {
 }
 
 
-
-volatile char received_char;  // Store received character globally
+volatile char received_char = 0;  // Store received character
 
 void USART3_4_IRQHandler(void) {
     if (USART3->ISR & USART_ISR_RXNE) {  
         received_char = USART3->RDR;  // Read received character
-        USART_SendChar(received_char);  // Echo back to PuTTY
+        USART_SendString("Received: ");
+        USART_SendChar(received_char);  
+        USART_SendChar('\n');  
     }
 }
 
@@ -162,17 +161,14 @@ void lab4_main(void)
 }
   */  
  void lab4_main() {
-    USART_SendString("USART Ready. Type a command:");
+    USART3_Init(); // Ensure USART3 is initialized
+    USART_SendString("USART Debug: STM32 is running...\n");
     
     while (1) {
-        if (received_char) {  // If a character was received
-            USART_SendString("You typed:");
-            USART_SendChar(received_char);
-            received_char = 0;  // Reset after processing
-        }
+        USART_SendString("Testing UART output...\n");
+        for (volatile int i = 0; i < 1000000; i++); // Small delay
     }
 }
-
 
 
 
