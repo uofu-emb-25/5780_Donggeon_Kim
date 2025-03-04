@@ -13,6 +13,26 @@ extern void SystemClock_Config(void);
 #define EXPECTED_ID        0xD4  // Expected value from WHO_AM_I
 
 
+#define SYS_CLOCK 8000000  // 8 MHz Clock
+
+
+//  GPIO Initialization
+void GPIO_Init(void) {
+    
+}
+
+void I2C2_Init(void) {
+    // Enable I2C2 Clock
+    RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
+
+    // Configure I2C2 Timing for 100kHz (from STM32 Reference Manual)
+    I2C2->TIMINGR = 0x10420F13; 
+
+    // Enable I2C2 Peripheral
+    I2C2->CR1 |= I2C_CR1_PE;
+}
+s
+
 
 
 
