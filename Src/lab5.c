@@ -17,17 +17,17 @@ extern void SystemClock_Config(void);
 
 
 void GPIO_Init(void) {
-    // Enable GPIOB and GPIOC clocks
+    // enable GPIOB and GPIOC clocks
     RCC->AHBENR |= RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN;
 
-    // PB11 (SDA), PB13 (SCL) - Alternate Function mode, Open-Drain
+    // pb11 (SDA), pb13 (SCL) - Alternate Function mode, Open-Drain
     GPIOB->MODER &= ~((3 << (11 * 2)) | (3 << (13 * 2)));  // Clear mode
     GPIOB->MODER |= (2 << (11 * 2)) | (2 << (13 * 2));     // Set AF mode
 
     GPIOB->OTYPER |= (1 << 11) | (1 << 13);  // Open-Drain mode
     GPIOB->PUPDR |= (1 << (11 * 2)) | (1 << (13 * 2));  // Pull-up resistors
 
-    // Set Alternate Function (AF) for I2C2
+    // set Alternate Function (AF) for I2C2
     GPIOB->AFR[1] |= (5 << ((11 - 8) * 4)) | (5 << ((13 - 8) * 4));
 
     // PB14 and PC0 as push-pull outputs (for selecting I2C mode)
@@ -79,10 +79,34 @@ void I2C_Write(uint8_t deviceAddr, uint8_t regAddr) {
     I2C2->CR2 |= I2C_CR2_STOP;
 }
 
+uint8_t I2C_Read(uint8_t deviceAddr) {
+    uint8_t data;
 
+    // Set slave address and read mode (R = 1)
+    I2C2->CR2 = (deviceAddr << 1) | (1 << 16) | I2C_CR2_RD_WRN;
 
+    // Start Condition
+    I2C2->CR2 |= I2C_CR2_START;
 
+    // Wait for RXNE or NACKF
+    while (!(I2C2->ISR & (I2C_ISR_RXNE | I2C_ISR_NACKF)));
 
+    if (I2C2->ISR & I2C_ISR_NACKF) {
+        I2C2->ICR |= I2C_ICR_NACKCF;  // Clear NACK flag
+        return 0;
+    }
+
+    // Read Data
+    data = I2C2->RXDR;
+
+    // Wait for Transfer Complete (TC)
+    while (!(I2C2->ISR & I2C_ISR_TC));
+
+    // Stop Condition
+    I2C2->CR2 |= I2C_CR2_STOP;
+
+    return data;
+}
 
 
 void lab5_main_part1() {
