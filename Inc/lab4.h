@@ -6,7 +6,7 @@
 
 // Define baud rate and system clock
 #define BAUD_RATE 115200
-#define SYS_CLOCK 8000000  // 8 MHz Clock
+#define SYS_CLOCK 48000000  // 8 MHz Clock
 
 // USART Functions
 void USART3_Init(int part);                   // Initialize USART3 with part selection
@@ -23,8 +23,14 @@ void GPIO_Init(void);                         // Initialize GPIO for LEDs
 void LED_Control(char led, char command);     // Control LEDs based on command
 
 // Main Lab4 Function
-void lab4_main(void);                         // Entry function for Lab 4
-void lab4_main_part1(void);                   // Checkoff 1 function
+void lab4_main(void); //내꺼                        // Entry function for Lab 4/void lab4_main_part1(void);                   // Checkoff 1 function
 void lab4_main_part2(void);                   // Checkoff 2 function
+void lab4_main(void);
+
+//void part1(void);
+//void part2(void);
+
+
+
 
 #endif // LAB4_H

@@ -23,7 +23,7 @@ void LED_Control(char led, char command);
 
 // Global Variables
 volatile uint8_t usart_mode = 1;  // 1 for part1, 2 for part2
-volatile char received_char = 0;
+volatile char received_character = 0;
 volatile bool new_data_available = false;
 volatile char uart_buffer[2];
 volatile uint8_t uart_rx_index = 0;
@@ -61,7 +61,7 @@ void USART3_4_IRQHandler(void) {
         if (usart_mode == 1) {  
             // Checkoff 1: Read One Char at a Time
             if (!new_data_available) {
-                received_char = temp_char;
+                received_character = temp_char;
                 new_data_available = true;
             }
         } else {  
@@ -83,7 +83,7 @@ bool USART3_ReceiveCharTimeout(char *c, uint32_t timeout) {
     while (timeout--) {
         if (new_data_available) { // Check if data is ready from IRQ handler
             new_data_available = false;  // Reset flag
-            *c = received_char;  // Store received character
+            *c = received_character;  // Store received character
             return true; // Successfully received character
         }
         __NOP(); // Small delay to avoid CPU overuse
@@ -153,8 +153,8 @@ void lab4_main_part1() {
     while (1) {
         if (new_data_available) {
             new_data_available = false; // Reset flag
-            char led = received_char;   // Read first input
-            received_char = 0;          // **Clear received_char to avoid carry-over**
+            char led = received_character;   // Read first input
+            received_character = 0;          // **Clear received_character to avoid carry-over**
            
             // Debugging: Print first received character
             char debug_msg[40];
@@ -172,7 +172,7 @@ void lab4_main_part1() {
             bool received = USART3_ReceiveCharTimeout(&command, 2000000); // Wait for 2 seconds
 
             // **Clear UART buffer to prevent carry-over**
-            received_char = 0;
+            received_character = 0;
             new_data_available = false;
 
             // Debugging: Print second received character
@@ -199,7 +199,7 @@ void lab4_main_part1() {
             LED_Control(led, command);
 
             // **Clear any possible leftover input**
-            received_char = 0;
+            received_character = 0;
             new_data_available = false;
         }
     }
@@ -238,4 +238,5 @@ void lab4_main_part2() {
             LED_Control(led, command);
         }
     }
-}
+} 
+    
