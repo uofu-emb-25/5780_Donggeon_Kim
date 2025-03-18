@@ -7,42 +7,48 @@
 #define EXPECTED_ID_1        0xD3  // Some sensors return 0xD3
 #define EXPECTED_ID_2        0xD4  // Some sensors return 0xD4
 #define TIMEOUT_LIMIT        1000000
+#define I2C_SLAVE_ADDRESS 0x69
+
 
 extern void SystemClock_Config(void);
 
-// Auto-detect I2C Address (PB14 controls SA0)
+// automoatedt I2C Address (PB14 controls SA0)
 uint8_t I2C_Get_Address(void) {
-    return (GPIOB->IDR & (1 << 14)) ? 0x6B : 0x69;  // SA0 HIGH → 0x6B, SA0 LOW → 0x69
+    return (GPIOB->IDR & (1 << 14)) ? 0x6B : 0x69;  // high => 0x6B,  low=> 0x69 SA0
 }
 
-// GPIO Initialization for LEDs
 void GPIO_LED_Init(void) {
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
-    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));
-    GPIOC->MODER |= ((1 << (6 * 2)) | (0 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2))); // PC7 input
-    GPIOC->OTYPER &= ~((1 << 6) | (1 << 8) | (1 << 9));
-    GPIOC->PUPDR &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));
-    GPIOC->ODR &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // able clock for GPIOC
+
+    //  PC6~PC9 as output for LED
+    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2))); 
+    GPIOC->MODER |= ((1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2)));
+
+    GPIOC->OTYPER &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9)); // output push-pull
+    GPIOC->ODR &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9)); //all LED off first
 }
 
-// GPIO Initialization for I2C
+// GPIO initialization for I2C
 void GPIO_I2C_Init(void) {
-    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
-    
-    GPIOB->MODER &= ~((3 << (11 * 2)) | (3 << (13 * 2)));
-    GPIOB->MODER |= (2 << (11 * 2)) | (2 << (13 * 2)); // PB11, PB13 alternate function
-    GPIOB->OTYPER |= (1 << 11) | (1 << 13); // Open-drain
-    GPIOB->PUPDR |= (1 << (11 * 2)) | (1 << (13 * 2)); // Pull-ups enabled
-    GPIOB->AFR[1] |= (5 << ((11 - 8) * 4)) | (5 << ((13 - 8) * 4)); // AF5 for I2C2
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;  // Enable GPIOB clock
 
-    GPIOB->MODER |= (1 << (14 * 2)); // PB14 output (for SA0)
+    // *** Set PB11 (SDA) and PB13 (SCL) as alternate function ***
+    GPIOB->MODER &= ~((3 << (11 * 2)) | (3 << (13 * 2)));  
+    GPIOB->MODER |= (2 << (11 * 2)) | (2 << (13 * 2));
+
+    GPIOB->OTYPER |= (1 << 11) | (1 << 13);  // Open-drain enable
+    GPIOB->PUPDR |= (1 << (11 * 2)) | (1 << (13 * 2));  // Pull-up resistor on SDA, SCL
+    GPIOB->AFR[1] |= (5 << ((11 - 8) * 4)) | (5 << ((13 - 8) * 4)); // I2C2 AF5
+
+    // *** Setup PB14 as output for SA0 ***
+    GPIOB->MODER |= (1 << (14 * 2));
     GPIOB->OTYPER &= ~(1 << 14);
-    GPIOB->ODR &= ~(1 << 14); // SA0 LOW → I2C Address 0x69 (Set HIGH for 0x6B)
+    GPIOB->ODR |= (1 << 14);  // SA0 HIGH (Use I2C addr 0x6B)
 
+    // *** Set PC0 as output for SPI/I2C mode selection ***
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
-    GPIOC->MODER |= (1 << (0 * 2)); // PC0 output
-    GPIOC->OTYPER &= ~(1 << 0);
-    GPIOC->ODR |= (1 << 0); // CS high
+    GPIOC->MODER |= (1 << (0 * 2));
+    GPIOC->ODR |= (1 << 0);
 }
 
 // Reset I2C Peripheral to Avoid Bus Lock
