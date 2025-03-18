@@ -16,7 +16,7 @@ extern void SystemClock_Config(void);
 #define SYS_CLOCK 8000000  // 8 MHz Clock
 
 
-void GPIO_Init(void) {
+void Lab5_GPIO_Init (void) {
     // enable GPIOB and GPIOC clocks
     RCC->AHBENR |= RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN;
 
@@ -39,18 +39,6 @@ void GPIO_Init(void) {
 
     GPIOB->ODR |= (1 << 14);  // Set PB14 HIGH
     GPIOC->ODR |= (1 << 0);   // Set PC0 HIGH
-}
-
-void I2C2_Init(void) {
-  
-    // Enable I2C2 Clock
-    RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
-
-    // Configure I2C2 Timing for 100kHz (from STM32 Reference Manual)
-    I2C2->TIMINGR = 0x10420F13; 
-
-    // Enable I2C2 Peripheral
-    I2C2->CR1 |= I2C_CR1_PE;
 }
 
 void I2C_Write(uint8_t deviceAddr, uint8_t regAddr) {
@@ -158,11 +146,23 @@ void GPIO_Control_Signals_Init(void) {
 }
 // LEDs connected to  pins (PC6 ~ PC9) as output
 void GPIO_LED_Init(void) {
+    //  Enable GPIOC Clock
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
-    GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
+
+    //  Reset all LED pins before configuring
+    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));  // Clear mode bits
+    GPIOC->MODER |= ((1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2)));  // Set output mode
+
+    //  Set as Push-Pull Output
     GPIOC->OTYPER &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
+
+    //  Disable Pull-up/Pull-down (default floating)
+    GPIOC->PUPDR &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));
+
+    //  TURN OFF ALL LEDs INITIALLY
     GPIOC->ODR &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
 }
+
 
 //added for the I2C2 peripheral for communication.
  
@@ -173,13 +173,30 @@ void I2C2_Init(void) {
 }
 
 
-void lab5_main_part1() {
-    
-    
-    return 0;
+int lab5_main_part1(void) {
+    GPIO_LED_Init();  // Initialize LED GPIO
+
+    while (1) {
+        GPIOC->ODR |= (1 << 6);  //  RED LED ON
+        HAL_Delay(500);
+        GPIOC->ODR &= ~(1 << 6); //  RED LED OFF
+
+        GPIOC->ODR |= (1 << 7);  //  BLUE LED ON
+        HAL_Delay(500);
+        GPIOC->ODR &= ~(1 << 7); //  BLUE LED OFF
+
+        GPIOC->ODR |= (1 << 8);  //  ORANGE LED ON
+        HAL_Delay(500);
+        GPIOC->ODR &= ~(1 << 8); //  ORANGE LED OFF
+
+        GPIOC->ODR |= (1 << 9);  //  GREEN LED ON
+        HAL_Delay(500);
+        GPIOC->ODR &= ~(1 << 9); //  GREEN LED OFF
+    }
+    return 0; //  End without infinite loops
 }
 
-void lab5_main_part2() {
+int lab5_main_part2(void) {
     
     
     return 0;
