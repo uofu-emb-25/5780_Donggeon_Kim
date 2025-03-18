@@ -156,7 +156,13 @@ void GPIO_Control_Signals_Init(void) {
     GPIOB->ODR |= (1 << 14);
     GPIOC->ODR |= (1 << 0);
 }
-
+// LEDs connected to  pins (PC6 ~ PC9) as output
+void GPIO_LED_Init(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+    GPIOC->MODER |= (1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2));
+    GPIOC->OTYPER &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
+    GPIOC->ODR &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
+}
 
 void lab5_main_part1() {
     
