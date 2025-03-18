@@ -146,6 +146,18 @@ void GPIO_I2C_Init(void) {
     GPIOB->AFR[1] |= (5 << ((11 - 8) * 4)) | (5 << ((13 - 8) * 4));
 }
 
+// GPIOB pin 14 & pin 0 for mode selection
+void GPIO_Control_Signals_Init(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN;
+    GPIOB->MODER |= (1 << (14 * 2));
+    GPIOC->MODER |= (1 << (0 * 2));
+    GPIOB->OTYPER &= ~(1 << 14);
+    GPIOC->OTYPER &= ~(1 << 0);
+    GPIOB->ODR |= (1 << 14);
+    GPIOC->ODR |= (1 << 0);
+}
+
+
 void lab5_main_part1() {
     
     
