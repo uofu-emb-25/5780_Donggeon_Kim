@@ -9,6 +9,10 @@
 #define TIMEOUT_LIMIT        1000000
 #define I2C_SLAVE_ADDRESS 0x69
 
+#define LED_RED    (1 << 6)  // PC6
+#define LED_BLUE   (1 << 7)  // PC7
+#define LED_ORANGE (1 << 8)  // PC8
+#define LED_GREEN  (1 << 9)  // PC9
 
 extern void SystemClock_Config(void);
 
@@ -57,92 +61,76 @@ void I2C2_Reset(void) {
     RCC->APB1RSTR &= ~RCC_APB1RSTR_I2C2RST; // Release Reset
 }
 
-// I2C Initialization
+uint8_t I2C_Read_WHO_AM_I(void) {
+    uint8_t id;
+    I2C2->CR2 = (I2C_SLAVE_ADDRESS << 1) | (1 << 16) | I2C_CR2_START | I2C_CR2_RD_WRN;
+    while (!(I2C2->ISR & I2C_ISR_RXNE));  // Wait data come
+    id = I2C2->RXDR;
+    I2C2->CR2 |= I2C_CR2_STOP;
+    return id;
+}
+
 void I2C2_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
-    I2C2->TIMINGR = (1 << I2C_TIMINGR_PRESC_Pos) |
-                (0x13 << I2C_TIMINGR_SCLL_Pos) |
-                (0xF << I2C_TIMINGR_SCLH_Pos) |
-                (0x2 << I2C_TIMINGR_SDADEL_Pos) |
-                (0x4 << I2C_TIMINGR_SCLDEL_Pos);
+
+    // Try a different TIMINGR value
+    I2C2->TIMINGR = (1 << 28) | (0x17 << 0) | (0x9 << 8) | (0x2 << 16) | (0x4 << 20);
+    
     I2C2->CR1 |= I2C_CR1_PE;
+}
+void Gyro_Reset(void) {
+    // Reset gyroscope using CTRL_REG2 (soft reset bit)
+    I2C2->CR2 = (I2C_SLAVE_ADDRESS << 1) | (2 << 16) | I2C_CR2_START;
+    while (!(I2C2->ISR & I2C_ISR_TXIS));
+
+    I2C2->TXDR = 0x21;  // CTRL_REG2 (Reset register)
+    while (!(I2C2->ISR & I2C_ISR_TXIS));
+
+    I2C2->TXDR = 0x04;  // Reset command (bit 2 = 1)
+    while (!(I2C2->ISR & I2C_ISR_TC));
+
+    I2C2->CR2 |= I2C_CR2_STOP;
+    HAL_Delay(10);  // Wait for gyro to reset
 }
 
 // Verify I2C Communication with WHO_AM_I
 void Verify_I2C_Communication(void) {
-    uint32_t timeout;
-    uint8_t receivedID;
-    uint8_t deviceAddress = I2C_Get_Address(); // Auto-detect address
+    uint8_t testWrite = 0x00;
+    I2C2->CR2 = (I2C_SLAVE_ADDRESS << 1) | (2 << 16) | I2C_CR2_START;
+    while (!(I2C2->ISR & I2C_ISR_TXIS));
+    
+    I2C2->TXDR = 0x20;  // Write to CTRL_REG1
+    while (!(I2C2->ISR & I2C_ISR_TXIS));
 
-    // Indicate start of communication
-    GPIOC->ODR |= (1 << 9); // Green ON
-    HAL_Delay(2000);
-    GPIOC->ODR &= ~(1 << 9);
-
-    // Write phase
-    I2C2->CR2 = (deviceAddress << 1) | (1 << 16) | I2C_CR2_START;
-    timeout = TIMEOUT_LIMIT;
-    while (!(I2C2->ISR & (I2C_ISR_TXIS | I2C_ISR_NACKF)) && --timeout);
-    if (I2C2->ISR & I2C_ISR_NACKF || timeout == 0) {
-        I2C2->ICR |= I2C_ICR_NACKCF;
-        while (1) {
-            GPIOC->ODR ^= (1 << 6);  // Red BLINKS (Write Fail)
-            HAL_Delay(500);
-        }
-    }
-    I2C2->TXDR = WHO_AM_I_REG;
-    timeout = TIMEOUT_LIMIT;
-    while (!(I2C2->ISR & I2C_ISR_TC) && --timeout);
-    if (timeout == 0) {
-        while (1) {
-            GPIOC->ODR ^= (1 << 6);  // Red BLINKS (Timeout)
-            HAL_Delay(500);
-        }
-    }
+    I2C2->TXDR = testWrite;  // Write zero (no power)
+    while (!(I2C2->ISR & I2C_ISR_TC));
     I2C2->CR2 |= I2C_CR2_STOP;
 
-    // Read phase
-    I2C2->CR2 = (deviceAddress << 1) | (1 << 16) | I2C_CR2_RD_WRN | I2C_CR2_START;
-    timeout = TIMEOUT_LIMIT;
-    while (!(I2C2->ISR & (I2C_ISR_RXNE | I2C_ISR_NACKF)) && --timeout);
-    if (I2C2->ISR & I2C_ISR_NACKF || timeout == 0) {
-        while (1) {
-            GPIOC->ODR ^= (1 << 8);  // Orange BLINKS (Read Fail)
-            HAL_Delay(500);
-        }
-    }
-    receivedID = I2C2->RXDR;
-    timeout = TIMEOUT_LIMIT;
-    while (!(I2C2->ISR & I2C_ISR_TC) && --timeout);
-    if (timeout == 0) {
-        while (1) {
-            GPIOC->ODR ^= (1 << 8);  // Orange BLINKS (TC Timeout)
-            HAL_Delay(500);
-        }
-    }
-    I2C2->CR2 |= I2C_CR2_STOP;
+    HAL_Delay(5);  // Short delay
 
-    // Check received WHO_AM_I value
+    uint8_t receivedID = I2C_Read_WHO_AM_I();
+
     if (receivedID == EXPECTED_ID_1 || receivedID == EXPECTED_ID_2) {
-        GPIOC->ODR |= (1 << 9);  // Green ON (Success)
+        GPIOC->ODR |= LED_GREEN;  // Green ON (Success)
     } else {
+        GPIOC->ODR |= LED_BLUE;  // Blue ON (Read Error)
         while (1) {
-            GPIOC->ODR ^= (1 << 6);  // Red BLINKS (Wrong ID)
+            GPIOC->ODR ^= LED_BLUE;  // Blue BLINKS
             HAL_Delay(500);
         }
     }
-
-    while (1);
 }
+
+
 
 // Main function
 int lab5_main_part1(void) {
     SystemClock_Config();
     GPIO_LED_Init();
     GPIO_I2C_Init();
-    I2C2_Reset();  // Reset I2C before initializing
+    I2C2_Reset();
     I2C2_Init();
-    GPIOC->ODR |= (1 << 8); // Orange LED ON initially
+    GPIOC->ODR |= (1 << 8); // Orange LED ON (Processing)
     Verify_I2C_Communication();
     return 0;
 }
