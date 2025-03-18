@@ -164,6 +164,15 @@ void GPIO_LED_Init(void) {
     GPIOC->ODR &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
 }
 
+//added for the I2C2 peripheral for communication.
+ 
+void I2C2_Init(void) {
+    RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
+    I2C2->TIMINGR = 0x10420F13; // Timing value for 100kHz
+    I2C2->CR1 |= I2C_CR1_PE;
+}
+
+
 void lab5_main_part1() {
     
     
