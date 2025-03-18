@@ -146,24 +146,22 @@ void GPIO_Control_Signals_Init(void) {
 }
 // LEDs connected to  pins (PC6 ~ PC9) as output
 void GPIO_LED_Init(void) {
-    //  Enable GPIOC Clock
+    // Enable GPIOC Clock
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 
-    //  Reset all LED pins before configuring
-    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));  // Clear mode bits
-    GPIOC->MODER |= ((1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2)));  // Set output mode
+    // Set PC6 - PC9 as OUTPUT mode
+    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));
+    GPIOC->MODER |= ((1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2)));
 
-    //  Set as Push-Pull Output
+    // Set as Push-Pull Output
     GPIOC->OTYPER &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
 
-    //  Disable Pull-up/Pull-down (default floating)
+    // Disable Pull-up/Pull-down (floating state)
     GPIOC->PUPDR &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));
 
-    //  TURN OFF ALL LEDs INITIALLY
+    // EXPLICITLY TURN OFF ALL LEDs INITIALLY
     GPIOC->ODR &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
 }
-
-
 //added for the I2C2 peripheral for communication.
  
 void I2C2_Init(void) {
