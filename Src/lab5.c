@@ -109,6 +109,43 @@ uint8_t I2C_Read(uint8_t deviceAddr) {
 }
 
 
+void Verify_I2C_Communication(void) {
+    uint8_t receivedID;
+
+    // Write WHO_AM_I Register Address
+    I2C_Write(I2C_SLAVE_ADDRESS, WHO_AM_I_REG);
+
+    // Read the Response from the Sensor
+    receivedID = I2C_Read(I2C_SLAVE_ADDRESS);
+
+    // Check if the received value matches expected ID (0xD4)
+    if (receivedID == EXPECTED_ID) {
+        // SUCCESS: Indicate with LED
+        GPIOB->ODR |= (1 << 0);  // Turn ON LED (for example)
+    } else {
+        // FAILURE: Blink LED for error
+        while (1) {
+            GPIOB->ODR ^= (1 << 0);
+            for (volatile int i = 0; i < 100000; i++);  // Delay
+        }
+    }
+}
+
+void GPIO_I2C_Init(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN; // Turn on clock for GPIOB
+    
+    // Set PB11 (SDA) and PB13 (SCL) to be alternate funtion mode
+    GPIOB->MODER &= ~((3 << (11 * 2)) | (3 << (13 * 2))); // clear first
+    GPIOB->MODER |= (2 << (11 * 2)) | (2 << (13 * 2));    // then put AF mode
+
+    GPIOB->OTYPER |= (1 << 11) | (1 << 13); // Make it open-drain (I2C need this)
+
+    GPIOB->PUPDR |= (1 << (11 * 2)) | (1 << (13 * 2)); // Pull-up, so it not float
+
+    // Set Alternate Funtion to I2C2_SDA (AF5) and I2C2_SCL (AF5)
+    GPIOB->AFR[1] |= (5 << ((11 - 8) * 4)) | (5 << ((13 - 8) * 4));
+}
+
 void lab5_main_part1() {
     
     
