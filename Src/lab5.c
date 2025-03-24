@@ -4,9 +4,8 @@
 #define TIMEOUT_LIMIT 1000000
 
 void GPIO_LED_Init(void) {
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // Enable GPIOC clock
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 
-    // Set PC6 - PC9 as output
     GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));
     GPIOC->MODER |= ((1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2)));
 
@@ -15,13 +14,14 @@ void GPIO_LED_Init(void) {
 }
 
 void GPIO_I2C_Init(void) {
-    RCC->AHBENR |= RCC_AHBENR_GPIOBEN; 
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
 
     GPIOB->MODER &= ~((3 << (11 * 2)) | (3 << (13 * 2)));
-    GPIOB->MODER |= ((2 << (11 * 2)) | (2 << (13 * 2)));  
+    GPIOB->MODER |= ((2 << (11 * 2)) | (2 << (13 * 2)));
 
-    GPIOB->OTYPER |= (1 << 11) | (1 << 13);
-    GPIOB->PUPDR |= ((1 << (11 * 2)) | (1 << (13 * 2)));
+    GPIOB->OTYPER |= (1 << 11) | (1 << 13);  // Open-drain
+    GPIOB->PUPDR &= ~((3 << (11 * 2)) | (3 << (13 * 2))); // Clear
+    GPIOB->PUPDR |= ((1 << (11 * 2)) | (1 << (13 * 2)));  // Enable pull-up
 
     GPIOB->AFR[1] |= (1 << ((11 - 8) * 4)) | (1 << ((13 - 8) * 4));
 }
@@ -37,22 +37,21 @@ void I2C2_Init(void) {
     I2C2->CR1 |= I2C_CR1_PE;
 }
 
-void Enable_Gyroscope(void) {
-    uint8_t powerOn = 0x0F;
-    gyroTransfer(I2C_GYRO_ADDR, 1, (int*)&powerOn, 0, 0x20);
+void Activate_Gyro(void) {
+    uint8_t activationCommand = 0x0F;
+    Communicate_With_Gyro(GYRO_I2C_ADDRESS, 1, (int*)&activationCommand, 0, 0x20);
     HAL_Delay(100);
 }
 
-uint8_t I2C_Read_WHO_AM_I(void) {
+uint8_t Read_Gyro_ID(void) {
     uint8_t id;
-    gyroTransfer(I2C_GYRO_ADDR, 1, (int*)&id, 1, WHO_AM_I_REG);
+    Communicate_With_Gyro(GYRO_I2C_ADDRESS, 1, (int*)&id, 1, GYRO_ID_REGISTER);
     return id;
 }
 
-void Verify_I2C_Communication(void) {
+void Verify_Gyro(void) {
     GPIOC->ODR |= LED_ORANGE;
-
-    uint8_t receivedID = I2C_Read_WHO_AM_I();
+    uint8_t receivedID = Read_Gyro_ID();
 
     if (receivedID == EXPECTED_ID_1 || receivedID == EXPECTED_ID_2) {
         GPIOC->ODR &= ~LED_ORANGE;
@@ -66,17 +65,16 @@ void Verify_I2C_Communication(void) {
         }
     }
 }
-int waitForI2CFlag(int flag) {
-    while (!(I2C2->ISR & (1 << 4)) && !(I2C2->ISR & (1 << flag))) {
-        // Busy wait for either the desired flag or an error (NACK)
-    }
 
-    if (I2C2->ISR & (1 << 4)) {
-        GPIOC->ODR |= LED_RED;  // Error detected, turn on Red LED
-        return 0;  // Indicate failure
-    }
+int WaitFor_I2C_Flag(int flag) {
+    uint32_t timeout = TIMEOUT_LIMIT;
+    while (!(I2C2->ISR & (1 << flag)) && --timeout);
 
-    return 1;  // Indicate success
+    if (timeout == 0 || (I2C2->ISR & (1 << 4))) {
+        GPIOC->ODR |= LED_RED;
+        return 0;
+    }
+    return 1;
 }
 
 void Process_Gyro_Data(void) {
@@ -91,19 +89,19 @@ void lab5_checkoff_final(void) {
     I2C2_Reset();
     HAL_Delay(10);
     I2C2_Init();
-    Enable_Gyroscope();
-    Verify_I2C_Communication();
+    Activate_Gyro();
+    Verify_Gyro();
     Process_Gyro_Data();
 }
 
-void gyroTransfer(int address, int numBytes, int *dataBuffer, int readMode, int registerAddress) {
+void Communicate_With_Gyro(int address, int numBytes, int *buffer, int mode, int regAddress) {
     const uint32_t BYTE_COUNT_POS = 16;
     const uint32_t DEVICE_ADDR_POS = 1;
     const uint32_t INC_FLAG = 0x80;
 
     I2C2->CR2 &= ~((0xFF << BYTE_COUNT_POS) | (0x3FF) | (1U << 10));
 
-    if (readMode) {
+    if (mode) {
         I2C2->CR2 |= (1U << BYTE_COUNT_POS) | (address << DEVICE_ADDR_POS);
     } else {
         I2C2->CR2 |= ((numBytes + 1) << BYTE_COUNT_POS) | (address << DEVICE_ADDR_POS);
@@ -111,23 +109,23 @@ void gyroTransfer(int address, int numBytes, int *dataBuffer, int readMode, int 
 
     I2C2->CR2 |= (1U << 13);
 
-    if (waitForI2CFlag(1)) {
-        I2C2->TXDR = registerAddress | ((numBytes > 1) ? INC_FLAG : 0);
+    if (WaitFor_I2C_Flag(1)) {
+        I2C2->TXDR = regAddress | ((numBytes > 1) ? INC_FLAG : 0);
 
-        if (readMode) {
+        if (mode) {
             while (!(I2C2->ISR & (1U << 6)));
             I2C2->CR2 &= ~((0xFF << BYTE_COUNT_POS) | (0x3FF));
             I2C2->CR2 |= (numBytes << BYTE_COUNT_POS) | (address << DEVICE_ADDR_POS) | (1U << 10);
             I2C2->CR2 |= (1U << 13);
 
             for (int i = 0; i < numBytes; i++) {
-                while (!waitForI2CFlag(2));
-                dataBuffer[i] = I2C2->RXDR;
+                while (!WaitFor_I2C_Flag(2));
+                buffer[i] = I2C2->RXDR;
             }
         } else {
             for (int i = 0; i < numBytes; i++) {
-                while (!waitForI2CFlag(1));
-                I2C2->TXDR = dataBuffer[i];
+                while (!WaitFor_I2C_Flag(1));
+                I2C2->TXDR = buffer[i];
             }
         }
     }
