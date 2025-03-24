@@ -1,13 +1,10 @@
-//done with help from gpt4o
+//lab5 - done with help with gpt 4o
 #include <stdint.h>
 #include <stdlib.h>
 #include "stm32f072xb.h"
 #include "system_setup.h"
 #include "stm32f0xx_hal.h"
 #include "lab5.h"
-
-// System Clock Configuration
-extern void SystemClock_Config(void);
 
 // I2C Slave Address (Gyroscope)
 #define I2C_SLAVE_ADDRESS 0x69
@@ -36,7 +33,7 @@ void GPIO_LED_Init(void) {
     GPIOC->ODR &= ~(LED_RED | LED_BLUE | LED_ORANGE | LED_GREEN);
 }
 
-// 🔹 **Initialize GPIO for I2C**
+// Configure GPIO for I2C
 void GPIO_I2C_Init(void) {
     RCC->AHBENR |= RCC_AHBENR_GPIOBEN; // Enable GPIOB clock
 
@@ -56,13 +53,13 @@ void GPIO_I2C_Init(void) {
     GPIOC->ODR |= (1 << 0);
 }
 
-// 🔹 **I2C Reset Function**
+// Reset I2C
 void I2C2_Reset(void) {
     RCC->APB1RSTR |= RCC_APB1RSTR_I2C2RST;  
     RCC->APB1RSTR &= ~RCC_APB1RSTR_I2C2RST;  
 }
 
-// 🔹 **I2C Initialization**
+// Initialize I2C
 void I2C2_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;  // Enable I2C2 Clock
     
@@ -72,7 +69,7 @@ void I2C2_Init(void) {
     I2C2->CR1 |= I2C_CR1_PE;  // Enable I2C2
 }
 
-// 🔹 **Read WHO_AM_I Register from Gyroscope**
+// Read WHO_AM_I Register from Gyroscope
 uint8_t I2C_Read_WHO_AM_I(void) {
     uint8_t id;
 
@@ -88,7 +85,7 @@ uint8_t I2C_Read_WHO_AM_I(void) {
     return id;
 }
 
-// 🔹 **Verify I2C Communication (Check WHO_AM_I)**
+// Verify I2C Communication (Check WHO_AM_I)
 void Verify_I2C_Communication(void) {
     GPIOC->ODR |= LED_ORANGE;  // Indicate Processing
 
@@ -108,7 +105,7 @@ void Verify_I2C_Communication(void) {
     }
 }
 
-// 🔹 **Process Gyroscope Data**
+// Process Gyroscope Data
 void Process_Gyro_Data(void) {
     uint8_t data[4];
     int16_t x_value, y_value;
@@ -149,24 +146,12 @@ void Process_Gyro_Data(void) {
     }
 }
 
-//  **Main Function - Part 1**
-int lab5_main_part1(void) {
-    SystemClock_Config();
+// Run the full Lab 5 Checkoff
+void lab5_checkoff_final(void) {
     GPIO_LED_Init();
     GPIO_I2C_Init();
     I2C2_Reset();
     I2C2_Init();
     Verify_I2C_Communication();
-    return 0;
-}
-
-// 🔹 **Main Function - Part 2**
-int lab5_main_part2(void) {
-    SystemClock_Config();
-    GPIO_LED_Init();
-    GPIO_I2C_Init();
-    I2C2_Reset();
-    I2C2_Init();
     Process_Gyro_Data();
-    return 0;
 }
