@@ -19,9 +19,9 @@ void GPIO_I2C_Init(void) {
     GPIOB->MODER &= ~((3 << (11 * 2)) | (3 << (13 * 2)));
     GPIOB->MODER |= ((2 << (11 * 2)) | (2 << (13 * 2)));
 
-    GPIOB->OTYPER |= (1 << 11) | (1 << 13);  // Open-drain
-    GPIOB->PUPDR &= ~((3 << (11 * 2)) | (3 << (13 * 2))); // Clear
-    GPIOB->PUPDR |= ((1 << (11 * 2)) | (1 << (13 * 2)));  // Enable pull-up
+    GPIOB->OTYPER |= (1 << 11) | (1 << 13);  // Open-drain mode
+    GPIOB->PUPDR &= ~((3 << (11 * 2)) | (3 << (13 * 2))); 
+    GPIOB->PUPDR |= ((1 << (11 * 2)) | (1 << (13 * 2)));  // Enable pull-up resistors
 
     GPIOB->AFR[1] |= (1 << ((11 - 8) * 4)) | (1 << ((13 - 8) * 4));
 }
@@ -39,13 +39,13 @@ void I2C2_Init(void) {
 
 void Activate_Gyro(void) {
     uint8_t activationCommand = 0x0F;
-    Communicate_With_Gyro(GYRO_I2C_ADDRESS, 1, (int*)&activationCommand, 0, 0x20);
+    Communicate_With_Gyro(GYRO_I2C_ADDR, 1, (int*)&activationCommand, 0, 0x20);
     HAL_Delay(100);
 }
 
 uint8_t Read_Gyro_ID(void) {
     uint8_t id;
-    Communicate_With_Gyro(GYRO_I2C_ADDRESS, 1, (int*)&id, 1, GYRO_ID_REGISTER);
+    Communicate_With_Gyro(GYRO_I2C_ADDR, 1, (int*)&id, 1, WHO_AM_I_REG);
     return id;
 }
 
@@ -83,12 +83,24 @@ void Process_Gyro_Data(void) {
     }
 }
 
+void Scan_I2C_Devices(void) {
+    for (uint8_t addr = 0x00; addr < 0x80; addr++) {
+        I2C2->CR2 = (addr << 1) | (1 << 16) | I2C_CR2_START;
+        HAL_Delay(10);
+        if (!(I2C2->ISR & I2C_ISR_NACKF)) {
+            GPIOC->ODR ^= LED_GREEN;  // Blink Green if device is found
+        }
+        I2C2->CR2 |= I2C_CR2_STOP;
+    }
+}
+
 void lab5_checkoff_final(void) {
     GPIO_LED_Init();
     GPIO_I2C_Init();
     I2C2_Reset();
     HAL_Delay(10);
     I2C2_Init();
+    Scan_I2C_Devices();  // Check for connected devices before activating gyro
     Activate_Gyro();
     Verify_Gyro();
     Process_Gyro_Data();
