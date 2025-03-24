@@ -26,16 +26,14 @@ extern void SystemClock_Config(void);
 #define LED_ORANGE (1 << 8)  // PC8
 #define LED_GREEN  (1 << 9)  // PC9
 
-// 🔹 **Initialize GPIO for LEDs**
 void GPIO_LED_Init(void) {
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN; // Enable GPIOC clock
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // Enable GPIOC clock
 
-    // Configure PC6 ~ PC9 as output (LEDs)
-    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2)));
+    GPIOC->MODER &= ~((3 << (6 * 2)) | (3 << (7 * 2)) | (3 << (8 * 2)) | (3 << (9 * 2))); 
     GPIOC->MODER |= ((1 << (6 * 2)) | (1 << (7 * 2)) | (1 << (8 * 2)) | (1 << (9 * 2)));
 
-    GPIOC->OTYPER &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));  // Push-pull mode
-    GPIOC->ODR &= ~(LED_RED | LED_BLUE | LED_ORANGE | LED_GREEN);  // Turn off all LEDs
+    GPIOC->OTYPER &= ~((1 << 6) | (1 << 7) | (1 << 8) | (1 << 9));
+    GPIOC->ODR &= ~(LED_RED | LED_BLUE | LED_ORANGE | LED_GREEN);
 }
 
 // 🔹 **Initialize GPIO for I2C**
@@ -44,7 +42,7 @@ void GPIO_I2C_Init(void) {
 
     // Configure PB11 (SDA) and PB13 (SCL) as alternate function Open-Drain
     GPIOB->MODER &= ~((3 << (11 * 2)) | (3 << (13 * 2)));
-    GPIOB->MODER |= ((2 << (11 * 2)) | (2 << (13 * 2)));
+    GPIOB->MODER |= ((2 << (11 * 2)) | (2 << (13 * 2)));  // Alternate function mode
 
     GPIOB->OTYPER |= (1 << 11) | (1 << 13); // Open-drain mode
     GPIOB->PUPDR |= ((1 << (11 * 2)) | (1 << (13 * 2))); // Enable pull-ups
@@ -67,13 +65,18 @@ void I2C2_Reset(void) {
 // 🔹 **I2C Initialization**
 void I2C2_Init(void) {
     RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;  // Enable I2C2 Clock
-    I2C2->TIMINGR = 0x10420F13;  // Standard-mode I2C (100kHz)
+    
+    // Configure I2C Timing for 100kHz Standard Mode
+    I2C2->TIMINGR = 0x10420F13;  
+
     I2C2->CR1 |= I2C_CR1_PE;  // Enable I2C2
 }
 
 // 🔹 **Read WHO_AM_I Register from Gyroscope**
 uint8_t I2C_Read_WHO_AM_I(void) {
     uint8_t id;
+
+    // Configure I2C2 for reading the WHO_AM_I register
     I2C2->CR2 = (I2C_SLAVE_ADDRESS << 1) | (1 << 16) | I2C_CR2_START | I2C_CR2_RD_WRN;
 
     uint32_t timeout = TIMEOUT_LIMIT;
@@ -81,7 +84,7 @@ uint8_t I2C_Read_WHO_AM_I(void) {
     if (timeout == 0) return 0xFF;  // Timeout Error
 
     id = I2C2->RXDR;
-    I2C2->CR2 |= I2C_CR2_STOP;
+    I2C2->CR2 |= I2C_CR2_STOP;  // Stop the transaction
     return id;
 }
 
@@ -105,7 +108,48 @@ void Verify_I2C_Communication(void) {
     }
 }
 
-// 🔹 **Main Function - Part 1**
+// 🔹 **Process Gyroscope Data**
+void Process_Gyro_Data(void) {
+    uint8_t data[4];
+    int16_t x_value, y_value;
+    int prev_led = -1;
+
+    while (1) {
+        // Read X and Y data
+        I2C2->CR2 = (I2C_SLAVE_ADDRESS << 1) | (4 << 16) | I2C_CR2_START | I2C_CR2_RD_WRN;
+        
+        while (!(I2C2->ISR & I2C_ISR_RXNE));
+        data[0] = I2C2->RXDR;
+        while (!(I2C2->ISR & I2C_ISR_RXNE));
+        data[1] = I2C2->RXDR;
+        while (!(I2C2->ISR & I2C_ISR_RXNE));
+        data[2] = I2C2->RXDR;
+        while (!(I2C2->ISR & I2C_ISR_RXNE));
+        data[3] = I2C2->RXDR;
+        
+        I2C2->CR2 |= I2C_CR2_STOP;
+
+        x_value = (int16_t)((data[1] << 8) | data[0]);
+        y_value = (int16_t)((data[3] << 8) | data[2]);
+
+        int new_led = -1;
+        if (abs(x_value) > 400 || abs(y_value) > 400) {
+            new_led = (x_value > y_value) ? LED_GREEN : LED_RED;
+        }
+
+        if (new_led != prev_led) {
+            GPIOC->ODR &= ~(LED_RED | LED_BLUE | LED_ORANGE | LED_GREEN);
+            if (new_led != -1) {
+                GPIOC->ODR |= new_led;
+            }
+            prev_led = new_led;
+        }
+
+        HAL_Delay(100);
+    }
+}
+
+//  **Main Function - Part 1**
 int lab5_main_part1(void) {
     SystemClock_Config();
     GPIO_LED_Init();
@@ -115,7 +159,6 @@ int lab5_main_part1(void) {
     Verify_I2C_Communication();
     return 0;
 }
-
 
 // 🔹 **Main Function - Part 2**
 int lab5_main_part2(void) {
