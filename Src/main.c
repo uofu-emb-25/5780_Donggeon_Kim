@@ -3,6 +3,7 @@
 #include "stm32f0xx_hal.h" // HAL library (if using HAL functions)
 
 int main(void) {
-    lab6_checkoff1();  // Run Lab 6 Checkoff 1
+    //lab6_checkoff1();  // Run Lab 6 Checkoff 1
+    lab6_checkoff2();  // Run Lab 6 Checkoff 2
     return 0;
 }
