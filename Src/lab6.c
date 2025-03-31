@@ -75,13 +75,8 @@ void lab6_checkoff1(void) {
 // Configure DAC
 void Configure_DAC(void) {
     RCC->APB1ENR |= RCC_APB1ENR_DACEN;  // Enable DAC clock
-    DAC->CR |= DAC_CR_EN1 | DAC_CR_TEN1;  // Enable DAC and trigger mode
-    DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;  // Trigger DAC conversion
-}
-
-// Output a fixed DAC voltage
-void Output_Static_DAC(uint8_t value) {
-    DAC->DHR8R1 = value;  // Set DAC output voltage (8-bit)
+    DAC->CR |= DAC_CR_EN1;  // Enable DAC Channel 1
+    for (volatile int i = 0; i < 1000; i++);  // Small delay to allow stabilization
 }
 
 // Define a Sine Wave lookup table (32 samples)
@@ -90,45 +85,44 @@ const uint8_t sine_wave[32] = {
     127,102,78,56,37,21,9,2,0,2,9,21,37,56,78,102
 };
 
-void Generate_Sine_Waveform_Once(void) {
+void Generate_Sine_Waveform(void) {
     for (int i = 0; i < 32; i++) {
         DAC->DHR8R1 = sine_wave[i];  // Output sine wave value
         for (volatile int j = 0; j < 200; j++);  // Shorter delay
     }
 }
 
-void Generate_Triangle_Waveform_Once(void) {
+void Generate_Triangle_Waveform(void) {
     for (uint8_t i = 0; i < 255; i++) {
         DAC->DHR8R1 = i;  // Rising edge
-        for (volatile int j = 0; j < 1000; j++); // Corrected delay
+        for (volatile int j = 0; j < 200; j++);
     }
     for (uint8_t i = 255; i > 0; i--) {
         DAC->DHR8R1 = i;  // Falling edge
-        for (volatile int j = 0; j < 1000; j++); // Corrected delay
+        for (volatile int j = 0; j < 200; j++);
     }
 }
 
-void Generate_Ramp_Waveform_Once(void) {
+void Generate_Ramp_Waveform(void) {
     for (uint8_t i = 0; i < 255; i++) {
         DAC->DHR8R1 = i;  // Increase voltage step-by-step
-        for (volatile int j = 0; j < 200; j++);  // Corrected delay loop
+        for (volatile int j = 0; j < 200; j++);
     }
 }
-
 
 void Generate_Waveform(uint8_t type) {
     switch (type) {
         case 0:
-            Generate_Sine_Waveform_Once();
+            Generate_Sine_Waveform();
             break;
         case 1:
-            Generate_Triangle_Waveform_Once();
+            Generate_Triangle_Waveform();
             break;
         case 2:
-            Generate_Ramp_Waveform_Once();
+            Generate_Ramp_Waveform();
             break;
         default:
-            Generate_Sine_Waveform_Once();
+            Generate_Sine_Waveform();
             break;
     }
 }
@@ -146,6 +140,7 @@ uint8_t Read_Button(void) {
     }
     return 0;
 }
+
 // Lab 6 Checkoff 2
 void lab6_checkoff2(void) {
     Configure_DAC();
@@ -156,7 +151,6 @@ void lab6_checkoff2(void) {
         if (Read_Button()) {
             waveform = (waveform + 1) % 3;  // Cycle through waveforms
         }
-        while (!(DAC->SR & DAC_SR_DMAUDR1)); // Wait for DAC update
         Generate_Waveform(waveform);  // Continuously update waveform
     }
 }
