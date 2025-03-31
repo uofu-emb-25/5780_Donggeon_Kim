@@ -82,10 +82,18 @@ void Configure_DAC(void) {
 void Output_Static_DAC(uint8_t value) {
     DAC->DHR8R1 = value;  // Set DAC output voltage (8-bit)
 }
+void Generate_Ramp_Waveform(void) {
+    while (1) {
+        for (uint8_t i = 0; i < 255; i++) {
+            DAC->DHR8R1 = i;  // Increase voltage step-by-step
+            for (volatile int j = 0; j < 1000; j++);  // Delay to control speed
+        }
+    }
+}
+
 
 // Lab 6 Checkoff 2
 void lab6_checkoff2(void) {
     Configure_DAC();
-    Output_Static_DAC(127);  // Output mid-range voltage (~1.65V)
-    while (1);
+    Generate_Ramp_Waveform(); 
 }
