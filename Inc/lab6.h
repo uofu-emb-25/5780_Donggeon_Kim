@@ -12,11 +12,15 @@ uint16_t Read_ADC(void);
 void Update_LEDs(uint16_t adc_value);
 void lab6_checkoff1(void);
 void lab6_checkoff2(void);
-void Output_Static_DAC(uint8_t value);  // Added function prototype for DAC
-void Generate_Ramp_Waveform(void);  // Added function prototype
-void Generate_Sine_Waveform(void);  // Added function prototype for sine wave
-void Generate_Triangle_Waveform(void);  // Added function prototype
-void Generate_Waveform(uint8_t type);  // Added function prototype
+
+// DAC and Waveform Functions
+void Output_Static_DAC(uint8_t value);
+void Generate_Ramp_Waveform_Once(void);
+void Generate_Sine_Waveform_Once(void);
+void Generate_Triangle_Waveform_Once(void);
+void Generate_Waveform(uint8_t type);
+
+// Button Control
 void Configure_Button(void);
 uint8_t Read_Button(void);
 
