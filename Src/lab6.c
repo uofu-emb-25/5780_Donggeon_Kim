@@ -117,7 +117,22 @@ void Generate_Triangle_Waveform(void) {
         }
     }
 }
-
+void Generate_Waveform(uint8_t type) {
+    switch (type) {
+        case 0:
+            Generate_Sine_Waveform();
+            break;
+        case 1:
+            Generate_Triangle_Waveform();
+            break;
+        case 2:
+            Generate_Ramp_Waveform();
+            break;
+        default:
+            Generate_Sine_Waveform();
+            break;
+    }
+}
 
 // Lab 6 Checkoff 2
 void lab6_checkoff2(void) {

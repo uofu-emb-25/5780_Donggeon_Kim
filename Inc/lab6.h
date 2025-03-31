@@ -16,5 +16,6 @@ void Output_Static_DAC(uint8_t value);  // Added function prototype for DAC
 void Generate_Ramp_Waveform(void);  // Added function prototype
 void Generate_Sine_Waveform(void);  // Added function prototype for sine wave
 void Generate_Triangle_Waveform(void);  // Added function prototype
+void Generate_Waveform(uint8_t type);  // Added function prototype
 
 #endif // LAB6_H
