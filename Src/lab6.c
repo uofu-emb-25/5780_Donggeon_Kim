@@ -128,29 +128,35 @@ void Generate_Waveform(uint8_t type) {
 }
 
 void Configure_Button(void) {
-    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // Enable GPIOC clock
-    GPIOC->MODER &= ~(3 << (13 * 2));  // Set PC13 as input
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;  // Enable GPIOA clock
+    GPIOA->MODER &= ~(3 << (0 * 2));  // Set PA0 as input
+    GPIOA->PUPDR |= (1 << (0 * 2));   // Enable pull-up resistor (PA0)
 }
+
 
 uint8_t Read_Button(void) {
-    if ((GPIOC->IDR & (1 << 13)) == 0) {  // Button press detected
-        for (volatile int i = 0; i < 100000; i++);  // Longer debounce delay
-        while ((GPIOC->IDR & (1 << 13)) == 0);  // Wait for button release
+    static uint8_t prev_state = 1;  // Assume button is initially not pressed
+    uint8_t current_state = (GPIOA->IDR & (1 << 0)) == 0 ? 0 : 1;  // Read current button state
+
+    if (prev_state == 1 && current_state == 0) {  // Detect falling edge (press)
+        for (volatile int i = 0; i < 100000; i++);  // Debounce delay
+        prev_state = current_state;
         return 1;
     }
+
+    prev_state = current_state;
     return 0;
 }
-
-// Lab 6 Checkoff 2
 void lab6_checkoff2(void) {
     Configure_DAC();
     Configure_Button();
     uint8_t waveform = 0;
 
     while (1) {
+        Generate_Waveform(waveform);  // Continuously generate the current waveform
+
         if (Read_Button()) {
             waveform = (waveform + 1) % 3;  // Cycle through waveforms
         }
-        Generate_Waveform(waveform);  // Continuously update waveform
     }
 }
