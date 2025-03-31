@@ -8,7 +8,7 @@
 #define ADC_CHANNEL 10  // PC0 -> ADC_IN10
 
 // Configure GPIO: LED Outputs and ADC Input
-void Configure_GPIO(void) {
+void Configure_GPIO_Lab6(void) {  // Renamed to avoid conflict
     // Enable clock for GPIOC
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
     
@@ -22,31 +22,20 @@ void Configure_GPIO(void) {
 
 // Configure ADC in continuous conversion mode
 void Configure_ADC(void) {
-    // Enable ADC clock
     RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
-
-    // Calibrate ADC
     ADC1->CR |= ADC_CR_ADCAL;
     while (ADC1->CR & ADC_CR_ADCAL); // Wait for calibration to finish
-
-    // Set ADC resolution to 8-bit and continuous conversion mode
     ADC1->CFGR1 |= ADC_CFGR1_CONT;  
-
-    // Select ADC channel 10 (PC0)
     ADC1->CHSELR = ADC_CHSELR_CHSEL10;
-
-    // Enable ADC
     ADC1->CR |= ADC_CR_ADEN;
-    while (!(ADC1->ISR & ADC_ISR_ADRDY)); // Wait until ADC is ready
-
-    // Start ADC conversion
+    while (!(ADC1->ISR & ADC_ISR_ADRDY));
     ADC1->CR |= ADC_CR_ADSTART;
 }
 
 // Read ADC value
 uint16_t Read_ADC(void) {
     while (!(ADC1->ISR & ADC_ISR_EOC)); // Wait until conversion is complete
-    return ADC1->DR; // Return ADC value
+    return ADC1->DR;
 }
 
 // Update LEDs based on ADC value
@@ -57,4 +46,15 @@ void Update_LEDs(uint16_t adc_value) {
     if (adc_value > 128) GPIOC->ODR |= (1 << LED2_PIN);
     if (adc_value > 192) GPIOC->ODR |= (1 << LED3_PIN);
     if (adc_value > 240) GPIOC->ODR |= (1 << LED4_PIN);
+}
+
+// Lab 6 Checkoff 1 - Read ADC and Update LEDs
+void lab6_checkoff1(void) {
+    Configure_GPIO_Lab6();  // Call the renamed function
+    Configure_ADC();
+  
+    while (1) {
+        uint16_t adc_value = Read_ADC();
+        Update_LEDs(adc_value);
+    }
 }
