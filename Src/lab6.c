@@ -74,16 +74,18 @@ void lab6_checkoff1(void) {
 
 // Configure DAC
 void Configure_DAC(void) {
-    RCC->APB1ENR |= RCC_APB1ENR_DACEN;
-    DAC->CR |= DAC_CR_EN1;
+    RCC->APB1ENR |= RCC_APB1ENR_DACEN;  // Enable DAC clock
+    DAC->CR |= DAC_CR_EN1;  // Enable DAC Channel 1 (PA4)
 }
 
-// Define a Sine Wave
-
-
-
+// Output a fixed DAC voltage
+void Output_Static_DAC(uint8_t value) {
+    DAC->DHR8R1 = value;  // Set DAC output voltage (8-bit)
+}
 
 // Lab 6 Checkoff 2
 void lab6_checkoff2(void) {
-  
+    Configure_DAC();
+    Output_Static_DAC(127);  // Output mid-range voltage (~1.65V)
+    while (1);
 }
