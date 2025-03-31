@@ -105,6 +105,18 @@ void Generate_Sine_Waveform(void) {
         }
     }
 }
+void Generate_Triangle_Waveform(void) {
+    while (1) {
+        for (uint8_t i = 0; i < 255; i++) {
+            DAC->DHR8R1 = i;  // Rising edge
+            for (volatile int j = 0; j < 1000; j++);
+        }
+        for (uint8_t i = 255; i > 0; i--) {
+            DAC->DHR8R1 = i;  // Falling edge
+            for (volatile int j = 0; j < 1000; j++);
+        }
+    }
+}
 
 
 // Lab 6 Checkoff 2
