@@ -133,9 +133,24 @@ void Generate_Waveform(uint8_t type) {
             break;
     }
 }
+void Configure_Button(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;  // Enable GPIOC clock
+    GPIOC->MODER &= ~(3 << (13 * 2));  // Set PC13 as input
+}
 
+uint8_t Read_Button(void) {
+    return (GPIOC->IDR & (1 << 13)) == 0;  // Button press detected
+}
 // Lab 6 Checkoff 2
 void lab6_checkoff2(void) {
     Configure_DAC();
-    Generate_Ramp_Waveform(); 
+    Configure_Button();
+    uint8_t waveform = 0;
+
+    while (1) {
+        if (Read_Button()) {
+            waveform = (waveform + 1) % 3;  // Cycle through waveforms
+            Generate_Waveform(waveform);
+        }
+    }
 }
