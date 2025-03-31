@@ -50,11 +50,30 @@ void Update_LEDs(uint16_t adc_value) {
 
 // Lab 6 Checkoff 1 - Read ADC and Update LEDs
 void lab6_checkoff1(void) {
-    Configure_GPIO_Lab6();  // Call the renamed function
+    Configure_GPIO_Lab6();
     Configure_ADC();
-  
+
     while (1) {
         uint16_t adc_value = Read_ADC();
-        Update_LEDs(adc_value);
+
+        // If ADC is very low, turn OFF all LEDs
+        if (adc_value < 50) {
+            GPIOC->ODR = 0;
+        }
+        // If ADC is medium, turn ON one LED
+        else if (adc_value < 150) {
+            GPIOC->ODR = (1 << LED1_PIN);
+        }
+        // If ADC is high, turn ON multiple LEDs
+        else if (adc_value < 250) {
+            GPIOC->ODR = (1 << LED1_PIN) | (1 << LED2_PIN);
+        }
+        // If ADC is very high, turn ON all LEDs
+        else {
+            GPIOC->ODR = (1 << LED1_PIN) | (1 << LED2_PIN) | (1 << LED3_PIN) | (1 << LED4_PIN);
+        }
+
+        // Small delay to stabilize
+        for (volatile int i = 0; i < 50000; i++);
     }
 }
