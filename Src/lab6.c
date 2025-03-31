@@ -1,3 +1,4 @@
+//Donggeon Kim  --this is a lab6 with help of gpt 4o
 #include "lab6.h"
 
 // Define LED pins and ADC channel
