@@ -30,7 +30,7 @@ int lab5_main(void) {
     Initialize_Gyroscope();
 
     while (1) {
-        HAL_Delay(100);
+        HAL_Delay(500);
         Read_Gyroscope_Data();
     }
 }
