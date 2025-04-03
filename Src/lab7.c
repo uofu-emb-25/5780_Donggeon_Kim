@@ -50,3 +50,19 @@ void Set_PWM_Duty(uint8_t duty) {
     if (duty > 255) duty = 255;
     TIM3->CCR3 = duty;
 }
+
+void Encoder_Init(void) {
+    RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+    RCC->AHBENR  |= RCC_AHBENR_GPIOAEN;
+
+    // PA0/PA1 as alternate function (TIM2_CH1/CH2)
+    GPIOA->MODER &= ~((3 << (2 * 0)) | (3 << (2 * 1)));
+    GPIOA->MODER |= (2 << (2 * 0)) | (2 << (2 * 1));
+    GPIOA->AFR[0] |= (1 << (4 * 0)) | (1 << (4 * 1)); // AF1
+
+    TIM2->SMCR |= TIM_SMCR_SMS_0 | TIM_SMCR_SMS_1; // Encoder mode 3
+    TIM2->CCMR1 |= TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC2S_0; // Inputs
+    TIM2->ARR = 0xFFFF;
+    TIM2->CNT = 0;
+    TIM2->CR1 |= TIM_CR1_CEN;
+}
