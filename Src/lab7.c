@@ -66,3 +66,17 @@ void Encoder_Init(void) {
     TIM2->CNT = 0;
     TIM2->CR1 |= TIM_CR1_CEN;
 }
+volatile int16_t motor_speed = 0;
+volatile int16_t target_speed = 100;
+volatile int16_t error = 0;
+volatile int16_t integral = 0;
+const int16_t Kp = 2;
+const int16_t Ki = 1;
+
+int16_t Get_Encoder_Speed(void) {
+    static int16_t last = 0;
+    int16_t current = TIM2->CNT;
+    int16_t diff = current - last;
+    last = current;
+    return diff;
+}
