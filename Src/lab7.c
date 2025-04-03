@@ -28,3 +28,25 @@ void Set_Motor_Output(int enable, int direction) {
         MOTOR_PORT->ODR |= MOTOR_DIRB_Pin;
     }
 }
+
+void PWM_Init(void) {
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+    RCC->AHBENR  |= RCC_AHBENR_GPIOCEN;
+
+    // Alternate function for PC8 -> TIM3_CH3
+    GPIOC->MODER &= ~(3 << (2 * 8));
+    GPIOC->MODER |= (2 << (2 * 8)); // AF
+    GPIOC->AFR[1] |= (0x00 << (4 * 0)); // AF0
+
+    TIM3->PSC = 479; // 48 MHz / 480 = 100 kHz
+    TIM3->ARR = 255;
+    TIM3->CCR3 = 0;
+    TIM3->CCMR2 |= (6 << 4); // PWM mode 1
+    TIM3->CCER |= TIM_CCER_CC3E;
+    TIM3->CR1 |= TIM_CR1_CEN;
+}
+
+void Set_PWM_Duty(uint8_t duty) {
+    if (duty > 255) duty = 255;
+    TIM3->CCR3 = duty;
+}
