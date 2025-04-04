@@ -145,7 +145,7 @@ void TIM6_DAC_IRQHandler(void) {
     
     // Call the PI update function
     PI_update();
-    log_data();
+   // log_data();
     TIM6->SR &= ~TIM_SR_UIF;        // Acknowledge the interrupt
 }
 

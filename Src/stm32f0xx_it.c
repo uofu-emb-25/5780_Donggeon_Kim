@@ -22,6 +22,7 @@
 #include <stm32f0xx_it.h>
 #include "stm32f072xb.h"
 
+extern void Lab7_Systick_Callback(void) ;
 /******************************************************************************/
 /*            Cortex-M0 Processor Exceptions Handlers                         */
 /******************************************************************************/
@@ -86,7 +87,7 @@ void SysTick_Handler(void)
 /* USER CODE BEGIN SysTick_IRQn 0 */
 HAL_IncTick();
 #if defined(LAB7)
-Lab7_SysTick_Handler();
+Lab7_Systick_Callback();
 #endif
 /* USER CODE END SysTick_IRQn 0 */
 /* USER CODE BEGIN SysTick_IRQn 1 */
