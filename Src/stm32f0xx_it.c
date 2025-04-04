@@ -77,18 +77,20 @@ void PendSV_Handler(void)
 extern volatile uint32_t main_loop_tick;  //  global variable from lab2.c
 
 
+//
+/**
+* @brief This function handles System tick timer.
+*/
 void SysTick_Handler(void)
 {
-    static volatile uint32_t tick_count = 0;
-  
-    HAL_IncTick();  // Maintain HAL timing functions
-    tick_count++;   // 
-    main_loop_tick++; //
-
-    if (tick_count >= 200) {  //  200ms
-       GPIOC->ODR ^= (1 << 7); // blinking Blue LED (PC7)
-        tick_count = 0;  // control variable -  counter
-   }
+/* USER CODE BEGIN SysTick_IRQn 0 */
+HAL_IncTick();
+#if defined(LAB7)
+Lab7_SysTick_Handler();
+#endif
+/* USER CODE END SysTick_IRQn 0 */
+/* USER CODE BEGIN SysTick_IRQn 1 */
+/* USER CODE END SysTick_IRQn 1 */
 }
 
 //2.5
