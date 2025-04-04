@@ -1,6 +1,8 @@
 #include "lab6.h"
 #include "stm32f072xb.h"   // Device-specific CMSIS header
 #include "stm32f0xx_hal.h" // HAL library (if using HAL functions)
+#include "stm32f0xx.h" 
+
 #include "lab7.h"
 int main(void) {
 

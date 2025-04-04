@@ -20,8 +20,8 @@ extern volatile int16_t target_speed;
 */
 #ifndef LAB7_H
 #define LAB7_H
-
-#include "stm32f4xx.h" // Include the STM32F4xx header file
+#include "stm32f0xx.h" 
+//#include "stm32f4xx.h" // Include the STM32F4xx header file
 
 // -------------------------------------------------------------------------------------------------------------
 // Global Variable Declarations
@@ -43,7 +43,7 @@ void button_init(void);
 void Lab7_Systick_Callback(void);
 
 // Main Program Function (lab7_main)
-int lab7_main(void);
+void lab7_main(void);
 
 // Motor Initialization (From motor.c, assumed function)
 void motor_init(void);

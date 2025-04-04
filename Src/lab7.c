@@ -127,7 +127,8 @@ void Button_Init(void) {
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "stm32f4xx.h"
+#include "stm32f0xx.h" 
+//#include "stm32f4xx.h"
 #include "motor.h"
 #include "SEGGER_RTT.h"
 
@@ -206,13 +207,46 @@ void Lab7_Systick_Callback(void) {
  */
 volatile uint32_t encoder_count = 0;
 
+
+/* -------------------------------------------------------------------------------------------------------------
+ * Called by SysTick Interrupt
+ * Performs button debouncing, changes wave type on button rising edge
+ * Updates frequency output from ADC value
+ * ------------------------------------------------------------------------------------------------------------- 
+ */
+void Lab7_Systick_Callback(void) {
+    debouncer = (debouncer << 1);
+    if (GPIOA->IDR & (1 << 0)) {  // Check if button is pressed (PA0)
+        debouncer |= 0x1;
+    }
+
+    if (debouncer == 0x7FFFFFFF) {  // If the button press is stable (debounced)
+        __disable_irq();  // Begin critical section
+        switch (target_rpm) {
+            case 0:
+                target_rpm = 80;  // Change speed to 80 RPM
+                break;
+            case 80:
+                target_rpm = 50;  // Change speed to 50 RPM
+                break;
+            case 50:
+                target_rpm = 80;  // Change speed to 80 RPM
+                break;
+            default:
+                target_rpm = 0;   // Change speed to 0 RPM
+                break;
+        }
+        __enable_irq();  // End critical section
+    }
+}
+
 int lab7_main(void) {
 
     debouncer = 0;                          // Initialize global variables
     HAL_Init();                             // Initialize HAL internals
     LED_init();                             // Initialize LED's
     button_init();                          // Initialize button
-SEE
+
     motor_init();                           // Initialize motor code
 
     while (1) {
