@@ -94,3 +94,7 @@ void Lab7_SysTick_Handler(void) {
     Set_Motor_Output(1, control);
     Set_PWM_Duty((uint8_t)abs(control));
 }
+void Button_Init(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+    GPIOA->MODER &= ~(3 << (2 * 0)); // Input mode
+}
