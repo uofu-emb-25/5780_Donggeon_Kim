@@ -1,5 +1,7 @@
 #include "stm32f0xx.h"
 #include "lab7.h"
+#include <stdlib.h>
+#include "SEGGER_RTT.h"
 
 #define MOTOR_EN_Pin   GPIO_PIN_8
 #define MOTOR_DIRA_Pin GPIO_PIN_9
@@ -93,6 +95,18 @@ void Lab7_SysTick_Handler(void) {
 
     Set_Motor_Output(1, control);
     Set_PWM_Duty((uint8_t)abs(control));
+
+    static uint8_t last = 1;
+    uint8_t current = (GPIOA->IDR & GPIO_IDR_0);
+
+    if (!current && last) { // falling edge
+        if (target_speed == 100) target_speed = 50;
+        else if (target_speed == 50) target_speed = 0;
+        else target_speed = 100;
+    }
+
+    last = current;
+    SEGGER_RTT_printf(0, "Target: %d Speed: %d Duty: %d\n", target_speed, motor_speed, abs(control));
 }
 void Button_Init(void) {
     RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
