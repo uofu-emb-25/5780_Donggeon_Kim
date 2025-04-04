@@ -80,3 +80,17 @@ int16_t Get_Encoder_Speed(void) {
     last = current;
     return diff;
 }
+void Lab7_SysTick_Handler(void) {
+    motor_speed = Get_Encoder_Speed();
+    error = target_speed - motor_speed;
+    integral += error;
+
+    int16_t control = (Kp * error) + (Ki * integral);
+
+    // Clamp output and direction
+    if (control > 255) control = 255;
+    if (control < -255) control = -255;
+
+    Set_Motor_Output(1, control);
+    Set_PWM_Duty((uint8_t)abs(control));
+}
