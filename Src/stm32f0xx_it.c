@@ -23,6 +23,7 @@
 #include "stm32f072xb.h"
 
 extern void Lab7_Systick_Callback(void) ;
+void SysTick_Handler(void);
 /******************************************************************************/
 /*            Cortex-M0 Processor Exceptions Handlers                         */
 /******************************************************************************/
@@ -82,6 +83,8 @@ extern volatile uint32_t main_loop_tick;  //  global variable from lab2.c
 /**
 * @brief This function handles System tick timer.
 */
+
+
 void SysTick_Handler(void)
 {
 /* USER CODE BEGIN SysTick_IRQn 0 */

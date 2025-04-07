@@ -4,7 +4,7 @@
  */
 #include "motor.h"
 #include "SEGGER_RTT.h"
-
+volatile int16_t output = 0;  // initialize to 0
 volatile int16_t error_integral = 0;    // Integrated error signal
 volatile uint8_t duty_cycle = 0;    	// Output PWM duty cycle
 volatile int16_t target_rpm = 0;    	// Desired speed target
@@ -17,13 +17,16 @@ static uint8_t buf0[1024];
 static uint8_t buf1[1024];
 static uint8_t buf2[1024];
 // Sets up the entire motor drive system
+
+
 void motor_init(void) {
-    pwm_init();
-    encoder_init();
-    ADC_init();
     SEGGER_RTT_ConfigUpBuffer(0, "", buf0, 1024, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
     SEGGER_RTT_ConfigUpBuffer(1, "", buf1, 1024, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
     SEGGER_RTT_ConfigUpBuffer(2, "", buf2, 1024, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
+
+    pwm_init();
+    encoder_init();
+    ADC_init();
 
 }
 
@@ -145,7 +148,7 @@ void TIM6_DAC_IRQHandler(void) {
     
     // Call the PI update function
     PI_update();
-   // log_data();
+    log_data();
     TIM6->SR &= ~TIM_SR_UIF;        // Acknowledge the interrupt
 }
 
@@ -169,7 +172,6 @@ void ADC_init(void) {
     while(!(ADC1->ISR & ADC_ISR_ADRDY));    // Wait until ADC ready
     ADC1->CR |= ADC_CR_ADSTART;             // Signal conversion start
 }
-
 void PI_update(void) {
     
     /* Run PI control loop
@@ -190,25 +192,21 @@ void PI_update(void) {
      */
     
     /// TODO: calculate error signal and write to "error" variable
-    error = target_rpm*2 - motor_speed;
+    error = target_rpm * 2.4 - motor_speed;
     /* Hint: Remember that your calculated motor speed may not be directly in RPM!
      *       You will need to convert the target or encoder speeds to the same units.
      *       I recommend converting to whatever units result in larger values, gives
      *       more resolution.
      */
     
-    
     /// TODO: Calculate integral portion of PI controller, write to "error_integral" variable
-    error_integral = (error)*(duty_cycle)+(error_integral);
+    error_integral = error + error_integral;
     /// TODO: Clamp the value of the integral to a limited positive range
-    if(error_integral < 0) 
-		{
-			error_integral = 0;
-		}
-	else if (error_integral > 3200) 
-		{
-			error_integral = 3200;
-		}
+    if (error_integral < 0) {
+        error_integral = 0;
+    } else if (error_integral > 3200) {
+        error_integral = 3200;
+    }
 
     /* Hint: The value clamp is needed to prevent excessive "windup" in the integral.
      *       You'll read more about this for the post-lab. The exact value is arbitrary
@@ -217,8 +215,7 @@ void PI_update(void) {
      */
     
     /// TODO: Calculate proportional portion, add integral and write to "output" variable
-    
-    int16_t output = ((Kp)*(error)) + ((Ki) * (error_integral)); // Change this!
+    output = (Kp * error) + (Ki * error_integral);
     
     /* Because the calculated values for the PI controller are significantly larger than 
      * the allowable range for duty cycle, you'll need to divide the result down into 
@@ -236,23 +233,21 @@ void PI_update(void) {
      * required for tuning.
      */
 
-     /// TODO: Divide the output into the proper range for output adjustment
-     output = output >> 5;
-     /// TODO: Clamp the output value between 0 and 100 
-    if(output < 0) 
-		{
-			output = 0;
-		}
-	else if (output > 100) 
-		{
-			output = 100;
-		}
+    /// TODO: Divide the output into the proper range for output adjustment
+    output = output >> 5;
+    /// TODO: Clamp the output value between 0 and 100 
+    if (output < 0) {
+        output = 0;
+    } else if (output > 100) {
+        output = 100;
+    }
+
     pwm_setDutyCycle(output);
     duty_cycle = output;            // For debug viewing
 
     // Read the ADC value for current monitoring, actual conversion into meaningful units 
     // will be performed by STMStudio
-    if(ADC1->ISR & ADC_ISR_EOC) {   // If the ADC has new data for us
+    if (ADC1->ISR & ADC_ISR_EOC) {   // If the ADC has new data for us
         adc_value = ADC1->DR;       // Read the motor current for debug viewing
     }
 }
