@@ -81,7 +81,7 @@ void Lab7_Systick_Callback(void) {
 volatile uint32_t encoder_count = 0;
 
 int lab7_main(void) {
-
+//
     debouncer = 0;                          // Initialize global variables
     HAL_Init();                             // Initialize HAL internals
     LED_init();                             // Initialize LED's
