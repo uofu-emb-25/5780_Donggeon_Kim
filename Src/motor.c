@@ -11,13 +11,14 @@ volatile int16_t target_rpm = 0;    	// Desired speed target
 volatile int16_t motor_speed = 0;   	// Measured motor speed
 volatile int8_t adc_value = 0;      	// ADC measured motor current
 volatile int16_t error = 0;         	// Speed error signal
-volatile uint8_t Kp = 1;            	// Proportional gain
-volatile uint8_t Ki = 1;            	// Integral gain
+//volatile uint8_t Kp =1 ;            	// Proportional gain
+volatile uint8_t Kp =25 ;            	// Proportional gain
+volatile uint8_t Ki = 0.995    ;      	// Integral gain
+//volatile uint8_t Ki = 1    ;      	// Integral gain
 static uint8_t buf0[1024];
 static uint8_t buf1[1024];
 static uint8_t buf2[1024];
 // Sets up the entire motor drive system
-
 
 void motor_init(void) {
     SEGGER_RTT_ConfigUpBuffer(0, "", buf0, 1024, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
